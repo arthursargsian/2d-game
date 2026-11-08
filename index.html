@@ -1,0 +1,3120 @@
+<!DOCTYPE html>
+<html lang="hy">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>«ԱՍՊԵՏԸ ԵՎ ՀԱՅՈՑ ԹԱԳԸ» • The Knight & The Armenian Crown</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #060408;
+            color: #f7e7ce;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Georgia, serif;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* SCREEN OVERLAYS */
+        .ui-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            pointer-events: auto;
+            backdrop-filter: blur(10px);
+            background: radial-gradient(circle at center, rgba(32, 14, 22, 0.88) 0%, rgba(8, 4, 7, 0.98) 100%);
+            transition: opacity 0.3s ease;
+        }
+        .hidden { display: none !important; }
+
+        /* MAIN MENU */
+        #main-menu { text-align: center; padding: 24px; }
+        .royal-crest {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 14px;
+            background: radial-gradient(circle, #e6b422 0%, #7d5209 70%, transparent 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 35px rgba(230, 180, 34, 0.5);
+            border: 2px solid #ffd700;
+        }
+        .royal-crest svg { width: 44px; height: 44px; fill: #fff8db; filter: drop-shadow(0 2px 6px #000); }
+        .game-title {
+            font-size: clamp(34px, 5.8vw, 56px);
+            color: #f7e2a9;
+            text-shadow: 0 4px 25px rgba(0,0,0,0.95), 0 0 35px rgba(212, 160, 23, 0.4);
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
+        }
+        .game-subtitle {
+            font-size: clamp(14px, 2vw, 19px);
+            color: #d1b89d;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 35px;
+            text-shadow: 0 2px 8px #000;
+        }
+        .menu-btn-col {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 330px;
+            max-width: 90vw;
+        }
+        .btn-royal {
+            background: linear-gradient(180deg, #351b22 0%, #1a0a0f 100%);
+            border: 1.5px solid #d4a017;
+            color: #fbf1dc;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.8), inset 0 0 12px rgba(212, 160, 23, 0.2);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .btn-royal:hover {
+            transform: translateY(-2px) scale(1.02);
+            background: linear-gradient(180deg, #d4a017 0%, #875c0d 100%);
+            color: #120601;
+            box-shadow: 0 10px 30px rgba(212, 160, 23, 0.5);
+        }
+        .btn-royal.primary {
+            background: linear-gradient(180deg, #9c1f24 0%, #520b0e 100%);
+            border-color: #ffd700;
+            font-size: 18px;
+        }
+        .btn-royal.primary:hover {
+            background: linear-gradient(180deg, #c02d33 0%, #751115 100%);
+            color: #fff;
+        }
+
+        /* WORLD MAP SCREEN */
+        #world-map-screen {
+            padding: 24px 35px;
+            justify-content: flex-start;
+            overflow-y: auto;
+        }
+        .map-header-row {
+            width: 100%;
+            max-width: 1140px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            border-bottom: 1.5px solid rgba(212, 160, 23, 0.35);
+            padding-bottom: 14px;
+        }
+        .map-cities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 18px;
+            width: 100%;
+            max-width: 1140px;
+            padding-bottom: 45px;
+        }
+        .city-box {
+            background: linear-gradient(145deg, #22141a 0%, #12090e 100%);
+            border: 2px solid #5a252d;
+            border-radius: 12px;
+            padding: 18px 20px;
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.7);
+        }
+        .city-box.unlocked { border-color: #d4a017; }
+        .city-box.unlocked:hover {
+            transform: translateY(-4px);
+            border-color: #ffd700;
+            box-shadow: 0 12px 35px rgba(212, 160, 23, 0.35);
+        }
+        .city-box.locked { filter: grayscale(90%) opacity(45%); cursor: not-allowed; }
+        .city-num-badge {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 9px;
+            border-radius: 6px;
+            background: #d4a017;
+            color: #1a0802;
+            display: inline-block;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        .city-name-text { font-size: 22px; color: #fce881; font-weight: 800; margin-bottom: 5px; }
+        .city-subtitle-text { font-size: 13px; color: #d8bda0; line-height: 1.45; margin-bottom: 10px; }
+        .city-theme-box {
+            font-size: 12px;
+            color: #c7b59e;
+            background: rgba(0,0,0,0.45);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #d4a017;
+        }
+
+        /* IN-GAME HUD */
+        #game-hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .hud-bar-top {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .hud-row-left, .hud-row-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .hud-badge {
+            background: linear-gradient(135deg, rgba(30, 14, 20, 0.88) 0%, rgba(45, 18, 25, 0.8) 100%);
+            border: 1.5px solid #d4a017;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            pointer-events: auto;
+        }
+        .pomegranate-slot {
+            width: 26px;
+            height: 26px;
+            display: inline-block;
+            background: radial-gradient(circle at 35% 35%, #e74c3c 0%, #962d22 75%, #50130d 100%);
+            border-radius: 50%;
+            border: 1px solid #ff7979;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.6);
+            position: relative;
+            transition: transform 0.2s, filter 0.2s;
+        }
+        .pomegranate-slot::before {
+            content: "▲";
+            font-size: 8px;
+            color: #801818;
+            position: absolute;
+            top: -6px;
+            left: 8px;
+        }
+        .pomegranate-slot.empty {
+            filter: grayscale(100%) opacity(25%);
+            box-shadow: none;
+            transform: scale(0.85);
+        }
+        .crown-shard-gem {
+            width: 14px;
+            height: 20px;
+            background: #23161c;
+            border: 1px solid #735022;
+            clip-path: polygon(50% 0%, 100% 35%, 80% 100%, 20% 100%, 0% 35%);
+            transition: all 0.3s;
+        }
+        .crown-shard-gem.active {
+            background: radial-gradient(circle, #ffd700 0%, #e67e22 100%);
+            border-color: #fff;
+            box-shadow: 0 0 12px #f39c12;
+        }
+
+        /* CHAPTER INTRO BANNER */
+        #chapter-card {
+            position: absolute;
+            top: 26%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.8s ease, transform 0.8s ease;
+            z-index: 25;
+        }
+        #chapter-card.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+        #chapter-label {
+            font-size: 14px;
+            color: #ffd700;
+            letter-spacing: 4px;
+            font-weight: 800;
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px #000;
+            margin-bottom: 6px;
+        }
+        #chapter-headline {
+            font-size: clamp(30px, 5vw, 50px);
+            color: #fff;
+            text-shadow: 0 4px 25px rgba(0,0,0,0.95), 0 0 25px rgba(212, 160, 23, 0.7);
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+        #chapter-sub {
+            font-size: 16px;
+            color: #f7e7ce;
+            text-shadow: 0 2px 10px #000;
+            letter-spacing: 1px;
+        }
+
+        /* MODAL STORY WINDOW */
+        #story-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 88%;
+            max-width: 640px;
+            background: linear-gradient(145deg, #241117 0%, #3a1520 50%, #15090e 100%);
+            border: 2px solid #e6b422;
+            border-radius: 14px;
+            padding: 26px 32px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.95), 0 0 35px rgba(230, 180, 34, 0.35);
+            display: none;
+            pointer-events: auto;
+            z-index: 100;
+        }
+        #story-modal h2 { color: #f7d050; font-size: 24px; margin-bottom: 12px; }
+        #story-modal p { color: #fbf2e0; font-size: 16px; line-height: 1.65; margin-bottom: 22px; text-align: justify; text-align-last: center; }
+        #story-modal button {
+            background: linear-gradient(180deg, #e6b422 0%, #996515 100%);
+            color: #170701;
+            font-weight: 800;
+            font-size: 15px;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+        }
+
+        /* CONTROLS GUIDE */
+        .controls-hint-bar {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(14, 8, 12, 0.85);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(212, 160, 23, 0.3);
+            border-radius: 20px;
+            padding: 5px 22px;
+            font-size: 12px;
+            color: #e6ceb5;
+            white-space: nowrap;
+            letter-spacing: 0.5px;
+            pointer-events: none;
+        }
+        .controls-hint-bar span { color: #ffd700; font-weight: 800; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="canvas"></canvas>
+
+    <!-- 1. MAIN MENU SCREEN -->
+    <div id="main-menu" class="ui-screen">
+        <div class="royal-crest">
+            <svg viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
+        </div>
+        <h1 class="game-title">«ԱՍՊԵՏԸ ԵՎ ՀԱՅՈՑ ԹԱԳԸ»</h1>
+        <p class="game-subtitle">2D Պատմական Էպոս • 7 Հայոց Քաղաքներ</p>
+
+        <div class="menu-btn-col">
+            <button class="btn-royal primary" id="btn-start-game">
+                <span>⚔️</span> Սկսել Արշավանքը
+            </button>
+            <button class="btn-royal" id="btn-show-map">
+                <span>🗺️</span> 7 Քաղաքների Քարտեզ
+            </button>
+            <button class="btn-royal" id="btn-show-story">
+                <span>📜</span> Թագի Պատմությունը
+            </button>
+            <button class="btn-royal" id="btn-toggle-music">
+                <span>🎵</span> Երաժշտություն
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. WORLD MAP / 7 CITIES SCREEN -->
+    <div id="world-map-screen" class="ui-screen hidden">
+        <div class="map-header-row">
+            <div>
+                <h2 style="color: #f7e2a9; font-size: 24px; font-weight: 800;">Հայաստանի 7 Հին Մայրաքաղաքները</h2>
+                <p style="color: #c9ad89; font-size: 13px;">Ընտրեք քաղաքը՝ Թագի կտորներն ազատագրելու համար</p>
+            </div>
+            <button class="btn-royal" style="padding: 8px 18px; font-size: 13px;" id="btn-back-menu">◀ Գլխավոր Մենյու</button>
+        </div>
+
+        <div class="map-cities-grid" id="cities-grid">
+            <!-- 7 City Cards injected dynamically -->
+        </div>
+    </div>
+
+    <!-- 3. IN-GAME HUD -->
+    <div id="game-hud" class="hidden">
+        <div class="hud-bar-top">
+            <div class="hud-row-left">
+                <!-- Pomegranate Hearts -->
+                <div class="hud-badge" id="hearts-container">
+                    <span class="pomegranate-slot" id="pom-1"></span>
+                    <span class="pomegranate-slot" id="pom-2"></span>
+                    <span class="pomegranate-slot" id="pom-3"></span>
+                </div>
+
+                <!-- Crown Shards Gems (1 to 5) -->
+                <div class="hud-badge" style="border-color: #f39c12;">
+                    <span style="color: #ffd700;">👑 Թագ՝</span>
+                    <div style="display: flex; gap: 5px;">
+                        <span class="crown-shard-gem" id="shard-1"></span>
+                        <span class="crown-shard-gem" id="shard-2"></span>
+                        <span class="crown-shard-gem" id="shard-3"></span>
+                        <span class="crown-shard-gem" id="shard-4"></span>
+                        <span class="crown-shard-gem" id="shard-5"></span>
+                    </div>
+                </div>
+
+                <!-- Ancient Gold Coins -->
+                <div class="hud-badge">
+                    <span style="color: #ffd700;">🪙 Դրամ՝</span>
+                    <span id="coins-val" style="color: #f1c40f;">0</span>
+                </div>
+            </div>
+
+            <div class="hud-row-right">
+                <div class="hud-badge" id="hud-city-title" style="color: #fce881; border-color: #e67e22;">
+                    1. ԵՐՎԱՆԴԱՇԱՏ
+                </div>
+                <button class="btn-royal" style="padding: 6px 14px; font-size: 12px;" id="btn-hud-to-map">🗺️ Քարտեզ</button>
+                <button class="btn-royal" style="padding: 6px 14px; font-size: 12px;" id="btn-fullscreen-toggle">⛶</button>
+            </div>
+        </div>
+
+        <!-- Chapter Banner Card -->
+        <div id="chapter-card">
+            <div id="chapter-label">ԳԼՈՒԽ I</div>
+            <div id="chapter-headline">ԵՐՎԱՆԴԱՇԱՏ</div>
+            <div id="chapter-sub">Երվանդունիների հին մայրաքաղաքը • Արաքսի և Ախուրյանի հովիտ</div>
+        </div>
+
+        <!-- Controls hint -->
+        <div class="controls-hint-bar">
+            <span>[A / D] / [← / →]</span> Վազք | 
+            <span>[Space / W]</span> Ցատկ / Կրկնակի ցատկ | 
+            <span>[Shift / C]</span> Սլացիկ Դաշ | 
+            <span>[Z / J]</span> 3-հարվածանի Սրի Կոմբո | 
+            <span>[X / K]</span> Վահան | 
+            <span>[E / Q]</span> Արծվի Գրոհ
+        </div>
+
+        <!-- Modal Dialog for Lore & Story -->
+        <div id="story-modal">
+            <div style="color: #ffd700; font-size: 24px; margin-bottom: 6px;">❖ ❖ ❖</div>
+            <h2 id="modal-title-text">Գաղտնի Մատյան</h2>
+            <p id="modal-body-text">Տեղեկություն...</p>
+            <button id="modal-ok-btn">Շարունակել Արշավանքը</button>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ==========================================================================
+   7 HISTORIC ARMENIAN CITIES DATA
+   ========================================================================== */
+const CITIES_DATA = [
+    {
+        id: 1,
+        name: "Երվանդաշատ",
+        subtitle: "Երվանդունիների հին մայրաքաղաքը",
+        theme: "Ուսումնական մակարդակ, արևոտ դաշտեր, Արաքսի հովիտ, առաջին թշնամիներ",
+        color: "#27ae60",
+        wallColor: "#61382b",
+        hasShard: true,
+        shardIndex: 1,
+        fact: "Երվանդաշատը հիմնադրել է Երվանդ Դ Վերջին թագավորը մ.թ.ա. 3-րդ դարում։ Այն կառուցված էր Արաքս և Ախուրյան գետերի միախառնման վայրում՝ հսկայական ժայռաբլրի վրա, և համարվում էր անառիկ միջնաբերդ։"
+    },
+    {
+        id: 2,
+        name: "Արտաշատ",
+        subtitle: "Արտաշես Ա-ի հիմնած «Հայկական Կարթագենը»",
+        theme: "Ավերակներ, թակարդներ, փլվող մարմարյա սյուներ, նետարձակ մեխանիզմներ",
+        color: "#e67e22",
+        wallColor: "#705c56",
+        hasShard: true,
+        shardIndex: 2,
+        fact: "Արտաշատը հիմնադրվել է մ.թ.ա. 176 թ.-ին։ Ըստ Պլուտարքոսի՝ քաղաքի հատակագիծը գծել է կարթագենացի մեծ զորավար Աննիբալը, ով ապաստանել էր Արտաշես Ա-ի մոտ։"
+    },
+    {
+        id: 3,
+        name: "Տիգրանակերտ",
+        subtitle: "Տիգրան Մեծի կայսերական մայրաքաղաքը",
+        theme: "Մեծ քաղաք, բազմահարկ հարթակներ, շարժվող վերելակներ, ծանրազեն պահակներ",
+        color: "#f1c40f",
+        wallColor: "#806634",
+        hasShard: true,
+        shardIndex: 3,
+        fact: "Տիգրանակերտը կառուցվել է Տիգրան Մեծի օրոք մ.թ.ա. 80-ական թթ.-ին։ Քաղաքն ուներ 25 մետր բարձրությամբ հզոր պարիսպներ, շքեղ պալատներ և հելլենիստական մեծ թատրոն։"
+    },
+    {
+        id: 4,
+        name: "Վաղարշապատ",
+        subtitle: "Արշակունիների ժամանակների հոգևոր կենտրոնը",
+        theme: "Քարե տաճարներ, գաղտնի անցումներ պատերի միջով, ստվերային արարածներ",
+        color: "#9b59b6",
+        wallColor: "#4a3c54",
+        hasShard: false,
+        fact: "Վաղարշապատը հիմնադրել է Վաղարշ Ա թագավորը 2-րդ դարում։ 4-րդ դարի սկզբում այն դարձավ քրիստոնեական Հայաստանի հոգևոր սիրտն ու Մայր Աթոռ Սուրբ Էջմիածնի հանգրվանը։"
+    },
+    {
+        id: 5,
+        name: "Դվին",
+        subtitle: "Մետաքսի ճանապարհի հարուստ առևտրական քաղաքը",
+        theme: "Արևելյան շուկա, տանիքներից տանիք ցատկեր, գորգեր, արագաշարժ գողեր",
+        color: "#c0392b",
+        wallColor: "#69372f",
+        hasShard: true,
+        shardIndex: 4,
+        fact: "Դվինը մայրաքաղաք է դարձել Խոսրով Գ Կոտակի օրոք (330-338 թթ.)։ Այն եղել է միջազգային առևտրի կենտրոն, որտեղով անցնում էր Մետաքսի մեծ ճանապարհը։"
+    },
+    {
+        id: 6,
+        name: "Արագած և Ամբերդ",
+        subtitle: "Ամպերի մեջ կախված անառիկ բերդաքաղաքը",
+        theme: "Ձյուն, մոլեգին քամի, սառցապատ ժայռեր, ուղղահայաց մագլցում",
+        color: "#3498db",
+        wallColor: "#394857",
+        hasShard: false,
+        fact: "Ամբերդը (7-13-րդ դդ.) գտնվում է Արագած լեռան հարավային լանջին՝ 2300 մետր բարձրության վրա։ Այն եղել է Պահլավունի իշխանների անառիկ ամրոցը։"
+    },
+    {
+        id: 7,
+        name: "Անի",
+        subtitle: "Բագրատունյաց «1001 եկեղեցիների քաղաք»",
+        theme: "Կարմիր-սև տուֆի ավերակներ, Ախուրյանի կիրճ, Վերջնական Մարտ Խավարի Ասպետի դեմ",
+        color: "#d35400",
+        wallColor: "#4f241a",
+        hasShard: true,
+        shardIndex: 5,
+        fact: "Անին 10-11-րդ դարերում Բագրատունյաց Հայաստանի փառահեղ մայրաքաղաքն էր՝ ավելի քան 100,000 բնակչությամբ։ Նրա հռչակավոր տաճարներն ու պարիսպները ճարտարապետության գլուխգործոց են։"
+    }
+];
+
+/* ==========================================================================
+   PROGRESSION & SAVE SYSTEM
+   ========================================================================== */
+function loadSave() {
+    try {
+        const s = localStorage.getItem('aspet_tag_save_v3');
+        if (s) return JSON.parse(s);
+    } catch(e) {}
+    return { unlocked: [1], shards: [], coins: 0, currentLevel: 1 };
+}
+function saveCurrentProgress() {
+    try {
+        localStorage.setItem('aspet_tag_save_v3', JSON.stringify({
+            unlocked: gameState.unlocked,
+            shards: gameState.shards,
+            coins: gameState.coins,
+            currentLevel: gameState.currentCityId
+        }));
+    } catch(e) {}
+}
+
+const savedData = loadSave();
+const gameState = {
+    screen: 'MENU', // 'MENU', 'MAP', 'PLAYING'
+    currentCityId: savedData.currentLevel || 1,
+    unlocked: savedData.unlocked || [1],
+    shards: savedData.shards || [],
+    coins: savedData.coins || 0,
+    paused: false,
+    cameraX: 0,
+    cameraY: 0
+};
+
+/* ==========================================================================
+   AUTHENTIC SYNTHESIZED ARMENIAN MUSIC & AUDIO
+   ========================================================================== */
+class ArmenianSoundTrack {
+    constructor() {
+        this.ctx = null;
+        this.musicPlaying = false;
+        this.timer = null;
+        this.notes = [220, 246.94, 261.63, 293.66, 329.63, 349.23, 392.00, 440];
+    }
+    init() {
+        if (!this.ctx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AC();
+        }
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+    }
+    tone(freq, type = 'sine', duration = 0.18, vol = 0.2) {
+        if (!this.ctx) return;
+        try {
+            const osc = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            g.gain.setValueAtTime(vol, this.ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+            osc.connect(g);
+            g.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + duration);
+        } catch(e) {}
+    }
+    jump() { this.init(); this.tone(260, 'triangle', 0.18, 0.15); }
+    dash() {
+        this.init();
+        this.tone(480, 'sawtooth', 0.14, 0.22);
+        setTimeout(() => this.tone(340, 'sine', 0.18, 0.18), 40);
+    }
+    eagleScreech() {
+        if (!this.ctx) return;
+        try {
+            const osc = this.ctx.createOscillator();
+            const g = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(750, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1450, this.ctx.currentTime + 0.12);
+            osc.frequency.exponentialRampToValueAtTime(550, this.ctx.currentTime + 0.3);
+            g.gain.setValueAtTime(0.24, this.ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+            osc.connect(g);
+            g.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.3);
+        } catch(e) {}
+    }
+    doubleJump() {
+        this.init();
+        this.tone(392, 'sine', 0.22, 0.2);
+        setTimeout(() => this.tone(523, 'sine', 0.25, 0.18), 70);
+    }
+    swordSwing(combo = 0) {
+        this.init();
+        this.tone(160 + combo * 50, 'sawtooth', 0.12, 0.18);
+    }
+    shieldBlock() {
+        this.init();
+        this.tone(480, 'square', 0.08, 0.28);
+        this.tone(200, 'triangle', 0.2, 0.25);
+    }
+    coin() {
+        this.init();
+        this.tone(880, 'sine', 0.08, 0.14);
+        setTimeout(() => this.tone(1320, 'sine', 0.16, 0.16), 70);
+    }
+    heart() {
+        this.init();
+        this.tone(523, 'triangle', 0.15, 0.2);
+        setTimeout(() => this.tone(659, 'triangle', 0.22, 0.2), 100);
+    }
+    shardFound() {
+        this.init();
+        [440, 554, 659, 880, 1108].forEach((f, i) => {
+            setTimeout(() => this.tone(f, 'triangle', 0.45, 0.25), i * 140);
+        });
+    }
+    toggleMusic() {
+        this.init();
+        this.musicPlaying = !this.musicPlaying;
+        if (this.musicPlaying) {
+            let step = 0;
+            const melody = [0, 2, 3, 4, 3, 2, 1, 0, 4, 5, 4, 3, 2, 0, 1, 0];
+            this.timer = setInterval(() => {
+                if (!this.musicPlaying) return;
+                const noteIdx = melody[step % melody.length];
+                this.tone(this.notes[noteIdx % this.notes.length], 'triangle', 0.65, 0.08);
+                if (step % 4 === 0) this.tone(146.83, 'sine', 1.2, 0.12);
+                step++;
+            }, 550);
+            return true;
+        } else {
+            clearInterval(this.timer);
+            return false;
+        }
+    }
+}
+const sound = new ArmenianSoundTrack();
+
+/* ==========================================================================
+   CANVAS FULLSCREEN SETUP & ADAPTIVE CAMERA
+   ========================================================================== */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let viewScale = 1;
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    viewScale = Math.max(0.85, Math.min(1.4, canvas.height / 560));
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// Load the authentic panoramic painting of ancient Yervandashat (No people, pure nature)
+const bgImage = new Image();
+bgImage.src = 'assets/yervandashat_bg.jpg?v=' + Date.now();
+let bgLoaded = false;
+bgImage.onload = () => { bgLoaded = true; };
+
+/* ==========================================================================
+   UI NAVIGATION & MODAL WINDOWS
+   ========================================================================== */
+const mainMenuEl = document.getElementById('main-menu');
+const mapScreenEl = document.getElementById('world-map-screen');
+const gameHudEl = document.getElementById('game-hud');
+const citiesGridEl = document.getElementById('cities-grid');
+
+function showMainMenu() {
+    gameState.screen = 'MENU';
+    gameState.paused = true;
+    mainMenuEl.classList.remove('hidden');
+    mapScreenEl.classList.add('hidden');
+    gameHudEl.classList.add('hidden');
+}
+
+function showWorldMap() {
+    gameState.screen = 'MAP';
+    gameState.paused = true;
+    renderCitiesGrid();
+    mainMenuEl.classList.add('hidden');
+    mapScreenEl.classList.remove('hidden');
+    gameHudEl.classList.add('hidden');
+}
+
+function launchCityLevel(id) {
+    gameState.currentCityId = id;
+    gameState.screen = 'PLAYING';
+    gameState.paused = false;
+
+    mainMenuEl.classList.add('hidden');
+    mapScreenEl.classList.add('hidden');
+    gameHudEl.classList.remove('hidden');
+
+    loadCityWorld(id);
+    displayChapterIntro(id);
+    updateHUD();
+}
+
+function renderCitiesGrid() {
+    citiesGridEl.innerHTML = '';
+    CITIES_DATA.forEach(city => {
+        const isUnlocked = gameState.unlocked.includes(city.id);
+        const card = document.createElement('div');
+        card.className = `city-box ${isUnlocked ? 'unlocked' : 'locked'}`;
+
+        card.innerHTML = `
+            <div style="position: absolute; top: 16px; right: 18px; font-size: 13px; font-weight: bold; color: ${isUnlocked ? '#2ecc71' : '#e74c3c'};">
+                ${isUnlocked ? '🔓 Բացված' : '🔒 Փակ'}
+            </div>
+            <div class="city-num-badge">${city.id}-րդ ՄԱԿԱՐԴԱԿ</div>
+            <div class="city-name-text">${city.name}</div>
+            <div class="city-subtitle-text">${city.subtitle}</div>
+            <div class="city-theme-box"><strong>Թեմա՝</strong> ${city.theme}</div>
+            ${city.hasShard ? '<div style="margin-top: 8px; color: #ffd700; font-size: 13px;">👑 Թագի Կտորի պահոց</div>' : ''}
+        `;
+
+        if (isUnlocked) {
+            card.onclick = () => {
+                sound.init();
+                launchCityLevel(city.id);
+            };
+        }
+        citiesGridEl.appendChild(card);
+    });
+}
+
+// Menu buttons listeners
+document.getElementById('btn-start-game').onclick = () => { sound.init(); launchCityLevel(gameState.currentCityId); };
+document.getElementById('btn-show-map').onclick = () => { sound.init(); showWorldMap(); };
+document.getElementById('btn-back-menu').onclick = () => showMainMenu();
+document.getElementById('btn-hud-to-map').onclick = () => showWorldMap();
+document.getElementById('btn-fullscreen-toggle').onclick = () => {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+    else document.exitFullscreen().catch(()=>{});
+};
+document.getElementById('btn-toggle-music').onclick = () => {
+    const on = sound.toggleMusic();
+    document.getElementById('btn-toggle-music').innerHTML = on ? '<span>🔊</span> Երաժշտություն։ Միացված' : '<span>🔇</span> Երաժշտություն։ Անջատված';
+};
+document.getElementById('btn-show-story').onclick = () => {
+    showStoryModal(
+        "«ԱՍՊԵՏԸ ԵՎ ՀԱՅՈՑ ԹԱԳԸ»",
+        "Շատ դարեր առաջ արքունիքում պահվում էր Հայոց Թագը՝ երկրի միասնության խորհրդանիշը։ Խավարի Ասպետը գողացավ և կոտրեց այն հինգ կտորի՝ թաքցնելով հայոց 7 հին քաղաքներում։\n\nԹագավորը կանչեց Ասպետին. «Գնա, քաջ Ասպետ, գտիր թագի կտորները և վերադարձրու երկրի միասնությունը»։ Ասպետի կողքին թռավ արքունական արծիվը, և նրանք ճանապարհ ընկան։"
+    );
+};
+
+// Chapter Banner Card Animation
+function displayChapterIntro(cityId) {
+    const city = CITIES_DATA.find(c => c.id === cityId) || CITIES_DATA[0];
+    const banner = document.getElementById('chapter-card');
+    document.getElementById('chapter-label').textContent = `ԳԼՈՒԽ ${getRomanNumeral(cityId)}`;
+    document.getElementById('chapter-headline').textContent = city.name.toUpperCase();
+    document.getElementById('chapter-sub').textContent = city.subtitle;
+    document.getElementById('hud-city-title').textContent = `${cityId}. ${city.name.toUpperCase()}`;
+
+    banner.classList.add('active');
+    setTimeout(() => banner.classList.remove('active'), 3200);
+}
+function getRomanNumeral(n) { return ['I','II','III','IV','V','VI','VII'][n-1] || 'I'; }
+
+// Story Modal Window
+const modalEl = document.getElementById('story-modal');
+const modalTitleEl = document.getElementById('modal-title-text');
+const modalBodyEl = document.getElementById('modal-body-text');
+const modalOkBtn = document.getElementById('modal-ok-btn');
+
+function showStoryModal(title, text) {
+    gameState.paused = true;
+    modalTitleEl.textContent = title;
+    modalBodyEl.textContent = text;
+    modalEl.style.display = 'block';
+}
+modalOkBtn.onclick = () => {
+    modalEl.style.display = 'none';
+    if (gameState.screen === 'PLAYING') gameState.paused = false;
+};
+
+/* ==========================================================================
+   INPUTS & SHORTCUTS
+   ========================================================================== */
+const keys = { left: false, right: false, jump: false, attack: false, shield: false };
+
+window.addEventListener('keydown', e => {
+    sound.init();
+    if (['ArrowLeft', 'KeyA'].includes(e.code)) keys.left = true;
+    if (['ArrowRight', 'KeyD'].includes(e.code)) keys.right = true;
+    if (['Space', 'KeyW', 'ArrowUp'].includes(e.code)) {
+        if (!keys.jump && knight) knight.requestJump();
+        keys.jump = true;
+    }
+    if (['KeyZ', 'KeyJ'].includes(e.code)) {
+        if (!keys.attack && knight) knight.requestAttack();
+        keys.attack = true;
+    }
+    if (['KeyX', 'KeyK'].includes(e.code)) keys.shield = true;
+    if (['ShiftLeft', 'ShiftRight', 'KeyC'].includes(e.code)) {
+        if (knight) knight.requestDash();
+    }
+    if (['KeyE', 'KeyQ'].includes(e.code)) {
+        if (eagle) eagle.triggerDiveAttack();
+    }
+    if (e.code === 'Escape') {
+        if (gameState.screen === 'PLAYING') showWorldMap();
+    }
+});
+
+window.addEventListener('keyup', e => {
+    if (['ArrowLeft', 'KeyA'].includes(e.code)) keys.left = false;
+    if (['ArrowRight', 'KeyD'].includes(e.code)) keys.right = false;
+    if (['Space', 'KeyW', 'ArrowUp'].includes(e.code)) keys.jump = false;
+    if (['KeyZ', 'KeyJ'].includes(e.code)) keys.attack = false;
+    if (['KeyX', 'KeyK'].includes(e.code)) keys.shield = false;
+});
+
+/* ==========================================================================
+   PARTICLES SYSTEM (Dust, Blood, Sparks, Leaves) & DAMAGE POPUPS
+   ========================================================================== */
+const particles = [];
+function spawnParticle(x, y, color, vx, vy, life = 35, size = 3) {
+    particles.push({ x, y, color, vx, vy, life, maxLife: life, size });
+}
+let screenShake = 0;
+function triggerScreenShake(amt) { screenShake = Math.max(screenShake, amt); }
+
+const damagePopups = [];
+function spawnDamageText(x, y, text, color = '#ff4444') {
+    damagePopups.push({ x, y, text, color, life: 28, maxLife: 28, vy: -2.0 });
+}
+
+/* ==========================================================================
+   THE HERO: KNIGHT (ԱՍՊԵՏ) - GORGEOUS DETAILED SPRITE & FLUID ANIMATION
+   ========================================================================== */
+class ArmenianKnight {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.w = 36;
+        this.h = 66; // Athletic human knight proportion
+        this.vx = 0;
+        this.vy = 0;
+        this.speed = 7.5;
+        this.gravity = 0.65;
+        this.onGround = false;
+        this.canDoubleJump = false;
+        this.facing = 1;
+        this.hp = 3;
+        this.maxHp = 3;
+
+        // Agile Acrobatics & Air Dash
+        this.isDashing = false;
+        this.dashTimer = 0;
+        this.dashCooldown = 0;
+        this.ghostTrails = []; // Motion blur afterimages!
+        this.isTouchingWall = false;
+
+        // Combat Combo & Shield
+        this.isAttacking = false;
+        this.attackTimer = 0;
+        this.comboIndex = 0;
+        this.comboResetTimer = 0;
+        this.isShielding = false;
+        this.invincibleTimer = 0;
+        this.animTimer = 0;
+        this.squash = 1;
+        this.slashTrails = []; // Lingering dynamic energy slash ribbons
+    }
+
+    requestDash() {
+        if (this.dashCooldown > 0 || this.isDashing) return;
+        this.isDashing = true;
+        this.dashTimer = 14;
+        this.dashCooldown = 26;
+        this.vx = this.facing * 14.5;
+        this.vy = 0; // Air dash floats horizontally
+        sound.dash();
+        triggerScreenShake(4);
+        for (let i = 0; i < 10; i++) {
+            spawnParticle(this.x + this.w/2, this.y + 30, '#ffd700', -this.facing * (Math.random() * 5 + 2), (Math.random()-0.5)*4, 18, 3);
+        }
+    }
+
+    requestJump() {
+        if (this.onGround) {
+            this.vy = -14.2;
+            this.onGround = false;
+            this.canDoubleJump = true;
+            this.squash = 1.3;
+            sound.jump();
+            for (let i = 0; i < 6; i++) spawnParticle(this.x + this.w/2, this.y + this.h, '#c29a65', (Math.random()-0.5)*4, -Math.random()*2, 18, 3);
+        } else if (this.isTouchingWall) {
+            // Wall Kick!
+            this.vy = -13.5;
+            this.vx = -this.facing * 8.0;
+            this.facing = -this.facing;
+            this.canDoubleJump = true;
+            sound.jump();
+            for (let i = 0; i < 8; i++) spawnParticle(this.x + (this.facing === 1 ? 0 : this.w), this.y + 20, '#ffffff', this.facing * 3, (Math.random()-0.5)*3, 16, 3);
+        } else if (this.canDoubleJump) {
+            this.vy = -13.2;
+            this.canDoubleJump = false;
+            this.squash = 1.25;
+            sound.doubleJump();
+            if (eagle) eagle.triggerDoubleJumpBoost();
+            for (let i = 0; i < 16; i++) spawnParticle(this.x + this.w/2, this.y + this.h/2, '#ffd700', (Math.random()-0.5)*6, (Math.random()-0.5)*6, 24, 4);
+        }
+    }
+
+    requestAttack() {
+        if (this.isShielding) return;
+        this.comboIndex = this.comboResetTimer > 0 ? (this.comboIndex + 1) % 3 : 0;
+        this.isAttacking = true;
+        this.attackTimer = 16; // 16 frames: fluid, cinematic, and snappy
+        this.comboResetTimer = 42;
+        sound.swordSwing(this.comboIndex);
+
+        const isAerial = !this.onGround;
+        const range = isAerial ? 74 : (this.comboIndex === 2 ? 84 : 64);
+        const damage = this.comboIndex === 2 ? 2 : 1;
+        const hitX = this.facing === 1 ? this.x + this.w - 10 : this.x - range + 10;
+        const hitY = isAerial ? this.y - 12 : this.y + 4;
+
+        // Dynamic agile lunge on attack
+        if (this.comboIndex === 2 && this.onGround) {
+            this.vx = this.facing * 7.5;
+        } else if (this.onGround) {
+            this.vx = this.facing * 3.5;
+        }
+
+        // Spawn lingering world-space Slash Arc Ribbon effect
+        this.slashTrails.push({
+            x: this.x + this.w / 2 + this.facing * 20,
+            y: this.y + this.h / 2,
+            facing: this.facing,
+            combo: this.comboIndex,
+            isAerial: isAerial,
+            alpha: 1.0,
+            life: 12,
+            maxLife: 12
+        });
+
+        // Trigger Screen Shake & Blade sparks
+        triggerScreenShake(this.comboIndex === 2 ? 9 : (isAerial ? 6 : 4));
+
+        const sparkCol = this.comboIndex === 1 ? '#ff7675' : '#ffd700';
+        for (let i = 0; i < (this.comboIndex === 2 ? 14 : 7); i++) {
+            spawnParticle(
+                this.x + (this.facing === 1 ? this.w + 15 : -15),
+                this.y + 20 + (Math.random() - 0.5) * 20,
+                sparkCol,
+                this.facing * (Math.random() * 5 + 2),
+                (Math.random() - 0.5) * 6,
+                20,
+                3.5
+            );
+        }
+
+        enemies.forEach(e => {
+            if (e.alive && rectIntersect(hitX, hitY, range, isAerial ? 74 : 54, e.x, e.y, e.w, e.h)) {
+                e.takeDamage(damage, this.facing);
+                triggerScreenShake(this.comboIndex === 2 ? 10 : 5);
+                spawnDamageText(e.x + e.w/2, e.y - 12, damage === 2 ? "CRITICAL! 2" : "1", damage === 2 ? "#ffd700" : "#ff4444");
+                for (let i = 0; i < (this.comboIndex === 2 ? 18 : 10); i++) {
+                    spawnParticle(e.x + e.w/2, e.y + e.h/2, '#e74c3c', (Math.random()-0.5)*8, (Math.random()-0.5)*8, 24, 4);
+                }
+            }
+        });
+
+        vases.forEach(v => {
+            if (!v.broken && rectIntersect(hitX, hitY, range, 54, v.x, v.y, v.w, v.h)) v.shatter();
+        });
+
+        chests.forEach(c => {
+            if (!c.opened && rectIntersect(hitX, hitY, range, 54, c.x, c.y, c.w, c.h)) c.open();
+        });
+    }
+
+    takeDamage(dmg, dir) {
+        if (this.invincibleTimer > 0) return;
+
+        // Shield Block
+        if (this.isShielding && ((dir > 0 && this.facing === -1) || (dir < 0 && this.facing === 1))) {
+            sound.shieldBlock();
+            triggerScreenShake(3);
+            for (let i = 0; i < 8; i++) spawnParticle(this.x + (this.facing === 1 ? this.w : 0), this.y + 30, '#ffffff', this.facing * 4, (Math.random()-0.5)*4, 16, 3);
+            this.vx = -dir * 3.5;
+            return;
+        }
+
+        this.hp -= dmg;
+        this.invincibleTimer = 55;
+        this.vx = -dir * 5.5;
+        this.vy = -6;
+        triggerScreenShake(8);
+        updateHUD();
+
+        if (this.hp <= 0) {
+            this.hp = this.maxHp;
+            this.x = 100;
+            this.y = 250;
+            this.vx = 0;
+            this.vy = 0;
+            updateHUD();
+            showStoryModal("Աննկուն Ոգի", "Ասպետի ուժը վերականգնվեց։ Խավարը չի կարող ընկճել Հայոց Թագի պաշտպանին։");
+        }
+    }
+
+    update(platforms) {
+        this.animTimer++;
+        if (this.invincibleTimer > 0) this.invincibleTimer--;
+        if (this.comboResetTimer > 0) this.comboResetTimer--;
+        if (this.dashCooldown > 0) this.dashCooldown--;
+        this.squash += (1 - this.squash) * 0.15;
+        this.isShielding = keys.shield && this.onGround && !this.isDashing;
+
+        if (this.isAttacking) {
+            this.attackTimer--;
+            if (this.attackTimer <= 0) this.isAttacking = false;
+        }
+
+        // Update lingering energy slash trails
+        for (let i = this.slashTrails.length - 1; i >= 0; i--) {
+            this.slashTrails[i].life--;
+            this.slashTrails[i].alpha = this.slashTrails[i].life / this.slashTrails[i].maxLife;
+            if (this.slashTrails[i].life <= 0) this.slashTrails.splice(i, 1);
+        }
+
+        // Fast Supersonic Dash
+        if (this.isDashing) {
+            this.dashTimer--;
+            this.vx = this.facing * 14.5;
+            this.vy = 0; // Float horizontally during dash
+            if (this.animTimer % 2 === 0) {
+                this.ghostTrails.push({ x: this.x, y: this.y, facing: this.facing, alpha: 0.75 });
+            }
+            if (this.dashTimer <= 0) {
+                this.isDashing = false;
+                this.vx = this.facing * 4.5;
+            }
+        } else if (!this.isShielding) {
+            if (keys.left) { this.vx = -this.speed; this.facing = -1; }
+            else if (keys.right) { this.vx = this.speed; this.facing = 1; }
+            else { this.vx *= 0.65; if (Math.abs(this.vx) < 0.2) this.vx = 0; }
+        } else {
+            this.vx *= 0.45;
+        }
+
+        // Amberd Blizzard wind (Level 6)
+        if (gameState.currentCityId === 6 && !this.isDashing) {
+            this.vx -= 0.6; // Wind pushing against knight
+        }
+
+        // Horizontal collision & Wall-slide detection
+        this.isTouchingWall = false;
+        this.x += this.vx;
+        platforms.forEach(p => {
+            if (rectIntersect(this.x, this.y, this.w, this.h, p.x, p.y, p.w, p.h)) {
+                if (this.vx > 0) {
+                    this.x = p.x - this.w;
+                    if (!this.onGround) this.isTouchingWall = true;
+                } else if (this.vx < 0) {
+                    this.x = p.x + p.w;
+                    if (!this.onGround) this.isTouchingWall = true;
+                }
+            }
+        });
+
+        // Vertical Gravity & Collision (Wall slide reduces fall speed)
+        if (!this.isDashing) {
+            const grav = this.isTouchingWall && this.vy > 0 ? this.gravity * 0.35 : this.gravity;
+            this.vy += grav;
+            this.y += this.vy;
+            if (this.isTouchingWall && this.vy > 0 && this.animTimer % 4 === 0) {
+                spawnParticle(this.x + (this.facing === 1 ? this.w : 0), this.y + 24, '#f39c12', -this.facing * 2.5, (Math.random()-0.5)*2, 12, 2.5);
+            }
+        }
+
+        const wasInAir = !this.onGround;
+        this.onGround = false;
+
+        platforms.forEach(p => {
+            if (rectIntersect(this.x, this.y, this.w, this.h, p.x, p.y, p.w, p.h)) {
+                if (this.vy > 0) {
+                    this.y = p.y - this.h;
+                    this.vy = 0;
+                    this.onGround = true;
+                    this.canDoubleJump = false;
+                    if (wasInAir) {
+                        this.squash = 0.82;
+                        for (let i = 0; i < 4; i++) spawnParticle(this.x + this.w/2, this.y + this.h, '#bcaaa4', (Math.random()-0.5)*4, -Math.random()*1.5, 14, 2.5);
+                    }
+                } else if (this.vy < 0) {
+                    this.y = p.y + p.h;
+                    this.vy = 0;
+                }
+            }
+        });
+
+        // Update Ghost Trails
+        for (let i = this.ghostTrails.length - 1; i >= 0; i--) {
+            this.ghostTrails[i].alpha -= 0.08;
+            if (this.ghostTrails[i].alpha <= 0) this.ghostTrails.splice(i, 1);
+        }
+
+        // Pit fall protection
+        if (this.y > 680) {
+            this.takeDamage(1, 1);
+            this.x = Math.max(100, this.x - 260);
+            this.y = 220;
+            this.vy = 0;
+        }
+    }
+
+    draw(ctx, camX, camY) {
+        // 1. High-Detail Motion Blur & Ghost Trail Afterimages during Dash
+        this.ghostTrails.forEach(gt => {
+            ctx.save();
+            ctx.translate(Math.round(gt.x - camX) + this.w / 2, Math.round(gt.y - camY) + this.h);
+            ctx.scale(gt.facing, 1);
+            ctx.translate(0, -this.h);
+
+            // Sleek silhouette with cyan-gold energy outline
+            ctx.fillStyle = `rgba(56, 189, 248, ${gt.alpha * 0.35})`;
+            ctx.beginPath();
+            ctx.ellipse(0, 32, 14, 26, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = `rgba(250, 204, 21, ${gt.alpha * 0.6})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+        });
+
+        if (this.invincibleTimer > 0 && Math.floor(this.invincibleTimer / 4) % 2 === 0) return;
+
+        const screenX = Math.round(this.x - camX);
+        const screenY = Math.round(this.y - camY);
+
+        ctx.save();
+        ctx.translate(screenX + this.w / 2, screenY + this.h);
+        ctx.scale(this.facing, this.squash);
+        ctx.translate(0, -this.h);
+
+        const isRunning = Math.abs(this.vx) > 0.5 && this.onGround;
+        const isAirborne = !this.onGround;
+        const runCycle = this.animTimer * 0.32;
+        const attackProgress = this.isAttacking ? (11 - this.attackTimer) / 11 : 0;
+
+        // Dynamic Athletic Leaning
+        const bodyLean = this.isDashing ? 0.35 : (isRunning ? (this.vx > 0 ? 0.12 : -0.12) * this.facing : 0);
+        ctx.rotate(bodyLean);
+
+        // Ground Contact Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(0, this.h, 19, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 1. Billowing Royal Crimson Cloak (Կարմիր Թիկնոց) with Organic Bezier Folds
+        ctx.save();
+        const capeWind = Math.sin(this.animTimer * 0.2) * 5 + (this.isDashing ? 32 : (isRunning ? 18 : 6)) + (isAirborne ? -this.vy * 1.5 : 0);
+        const capeGrad = ctx.createLinearGradient(-12, 18, -32 - capeWind, 56);
+        capeGrad.addColorStop(0, '#b91c1c');
+        capeGrad.addColorStop(0.6, '#991b1b');
+        capeGrad.addColorStop(1, '#450a0a');
+        ctx.fillStyle = capeGrad;
+
+        ctx.beginPath();
+        ctx.moveTo(-10, 18);
+        ctx.quadraticCurveTo(-18 - capeWind * 0.5, 34, -26 - capeWind, 54);
+        ctx.quadraticCurveTo(-14 - capeWind * 0.3, 56, -6, 52);
+        ctx.lineTo(-4, 24);
+        ctx.closePath();
+        ctx.fill();
+
+        // Cape gold trim edge
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-10, 18);
+        ctx.quadraticCurveTo(-18 - capeWind * 0.5, 34, -26 - capeWind, 54);
+        ctx.stroke();
+        ctx.restore();
+
+        // 2. Articulated Legs, Thighs & Sabatons (Smooth Biological Running Kinematics)
+        const legSwing = isRunning ? Math.sin(runCycle) * 14 : 0;
+        const kneeBend = isRunning ? Math.max(0, Math.cos(runCycle) * 8) : (isAirborne ? 6 : 0);
+
+        // Back Leg (Darker tone for depth)
+        ctx.save();
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.moveTo(-3, 38);
+        ctx.lineTo(-8 - legSwing * 0.6, 50 - kneeBend);
+        ctx.lineTo(-11 - legSwing * 0.8, 64);
+        ctx.lineTo(-4 - legSwing * 0.8, 64);
+        ctx.lineTo(2, 38);
+        ctx.closePath();
+        ctx.fill();
+        // Back Sabaton (Boot)
+        ctx.fillStyle = '#334155';
+        ctx.beginPath();
+        ctx.moveTo(-12 - legSwing * 0.8, 62);
+        ctx.lineTo(-2 - legSwing * 0.8, 62);
+        ctx.lineTo(2 - legSwing * 0.8, 66);
+        ctx.lineTo(-14 - legSwing * 0.8, 66);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Front Leg (Specular polished steel highlight)
+        ctx.save();
+        const legGrad = ctx.createLinearGradient(0, 38, 0, 66);
+        legGrad.addColorStop(0, '#475569');
+        legGrad.addColorStop(0.5, '#64748b');
+        legGrad.addColorStop(1, '#334155');
+        ctx.fillStyle = legGrad;
+
+        ctx.beginPath();
+        ctx.moveTo(1, 38);
+        ctx.lineTo(7 + legSwing * 0.6, 50 + kneeBend);
+        ctx.lineTo(6 + legSwing * 0.8, 64);
+        ctx.lineTo(13 + legSwing * 0.8, 64);
+        ctx.lineTo(8, 38);
+        ctx.closePath();
+        ctx.fill();
+
+        // Knee Poleyn (Curved steel knee cap)
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.arc(6 + legSwing * 0.6, 50 + kneeBend, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Front Sabaton with steel toe
+        ctx.fillStyle = '#64748b';
+        ctx.beginPath();
+        ctx.moveTo(4 + legSwing * 0.8, 61);
+        ctx.lineTo(15 + legSwing * 0.8, 61);
+        ctx.lineTo(18 + legSwing * 0.8, 66);
+        ctx.lineTo(2 + legSwing * 0.8, 66);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // 3. Forged Steel Cuirass (Անատոմիական Զրահ) with Metallic Specular Shading
+        ctx.save();
+        const torsoGrad = ctx.createLinearGradient(-14, 16, 14, 38);
+        torsoGrad.addColorStop(0, '#94a3b8');
+        torsoGrad.addColorStop(0.4, '#64748b');
+        torsoGrad.addColorStop(0.8, '#334155');
+        torsoGrad.addColorStop(1, '#1e293b');
+        ctx.fillStyle = torsoGrad;
+
+        // Curving breastplate
+        ctx.beginPath();
+        ctx.moveTo(-12, 17);
+        ctx.quadraticCurveTo(0, 15, 12, 17);
+        ctx.lineTo(10, 38);
+        ctx.quadraticCurveTo(0, 40, -10, 38);
+        ctx.closePath();
+        ctx.fill();
+
+        // Metallic Pectoral & Abdominal Specular Lines
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-7, 22);
+        ctx.quadraticCurveTo(0, 24, 7, 22);
+        ctx.stroke();
+
+        // Royal Armenian Crimson Sash with Woven Gold Inlay
+        ctx.fillStyle = '#991b1b';
+        ctx.beginPath();
+        ctx.moveTo(-11, 18);
+        ctx.lineTo(-4, 17);
+        ctx.lineTo(10, 35);
+        ctx.lineTo(5, 37);
+        ctx.closePath();
+        ctx.fill();
+
+        // Golden Royal Sunburst Medallion (Արևախաչ) on breastplate center
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.arc(0, 26, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.arc(0, 26, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Gold Trim Belt with Lion Buckle
+        ctx.fillStyle = '#d97706';
+        ctx.fillRect(-10, 35, 20, 4);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(-3, 34, 6, 6);
+
+        // Pauldrons (Layered curved shoulder armor)
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath();
+        ctx.ellipse(-12, 19, 6, 7, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#cbd5e1';
+        ctx.beginPath();
+        ctx.ellipse(10, 19, 6, 7, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        // 4. Armenian Royal Greathelm (Սաղավարտ և Թագ)
+        ctx.save();
+        const helmGrad = ctx.createLinearGradient(-10, 0, 10, 18);
+        helmGrad.addColorStop(0, '#cbd5e1');
+        helmGrad.addColorStop(0.5, '#64748b');
+        helmGrad.addColorStop(1, '#334155');
+        ctx.fillStyle = helmGrad;
+
+        // Domed sculpted helmet
+        ctx.beginPath();
+        ctx.arc(0, 9, 11, Math.PI, 0);
+        ctx.quadraticCurveTo(11, 17, 9, 18);
+        ctx.lineTo(-9, 18);
+        ctx.quadraticCurveTo(-11, 17, -11, 9);
+        ctx.closePath();
+        ctx.fill();
+
+        // Royal Golden Crown Band with Armenian Triangular Diadem
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(-10, 6, 20, 4);
+        ctx.beginPath();
+        ctx.moveTo(-9, 6);
+        ctx.lineTo(-6, 1);
+        ctx.lineTo(-3, 6);
+        ctx.lineTo(0, -1); // Center high spire
+        ctx.lineTo(3, 6);
+        ctx.lineTo(6, 1);
+        ctx.lineTo(9, 6);
+        ctx.closePath();
+        ctx.fill();
+
+        // Flowing Crimson Horsehair Plume (Թոփոփ) trailing from crest
+        ctx.fillStyle = '#dc2626';
+        const plumeWave = Math.sin(this.animTimer * 0.3) * 4;
+        ctx.beginPath();
+        ctx.moveTo(0, -1);
+        ctx.quadraticCurveTo(-10 - capeWind * 0.4, -4 + plumeWave, -18 - capeWind * 0.6, 6 + plumeWave);
+        ctx.quadraticCurveTo(-10 - capeWind * 0.3, 3, -1, 3);
+        ctx.closePath();
+        ctx.fill();
+
+        // Dark Visor Slit with Glowing Warrior Eyes
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(1, 8, 9, 4);
+        // Glowing cyan-gold warrior gaze
+        ctx.fillStyle = '#38bdf8';
+        ctx.shadowColor = '#06b6d4';
+        ctx.shadowBlur = 6;
+        ctx.fillRect(3, 9, 4, 2);
+        ctx.shadowBlur = 0;
+        ctx.restore();
+
+        // 5. Armenian Heater Shield (Վահան)
+        if (this.isShielding) {
+            ctx.save();
+            ctx.translate(14, 20);
+
+            // Shimmering Golden Hexagonal Energy Barrier
+            ctx.fillStyle = 'rgba(245, 158, 11, 0.28)';
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(20, -12);
+            ctx.lineTo(34, 0);
+            ctx.lineTo(34, 30);
+            ctx.lineTo(20, 42);
+            ctx.lineTo(6, 30);
+            ctx.lineTo(6, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Lacquered Curved Heater Shield Body
+            const shieldGrad = ctx.createLinearGradient(0, 0, 22, 34);
+            shieldGrad.addColorStop(0, '#b91c1c');
+            shieldGrad.addColorStop(0.5, '#7f1d1d');
+            shieldGrad.addColorStop(1, '#450a0a');
+            ctx.fillStyle = shieldGrad;
+
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(18, 0);
+            ctx.lineTo(18, 22);
+            ctx.quadraticCurveTo(9, 36, 0, 22);
+            ctx.closePath();
+            ctx.fill();
+
+            // Polished Steel Rim & Studs
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Royal Golden Armenian Cross in center
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(7, 4, 4, 18);
+            ctx.fillRect(2, 9, 14, 4);
+
+            ctx.restore();
+        }
+
+        // 6. Broadsword & Dynamic Kinetic Attack Stances
+        if (this.isAttacking) {
+            ctx.save();
+            ctx.translate(12, 26);
+
+            if (isAirborne) {
+                // AERIAL CYCLONE SOMERSAULT: 360-degree aerial spin cutting all around
+                ctx.rotate(attackProgress * Math.PI * 2);
+
+                // Forged Blade
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, -4, 48, 8);
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(0, -4, 48, 8);
+
+                // Circular Cyclone Blade Aura
+                ctx.save();
+                const spinGlow = ctx.createRadialGradient(0, 0, 24, 0, 0, 68);
+                spinGlow.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+                spinGlow.addColorStop(0.4, 'rgba(56, 189, 248, 0.85)');
+                spinGlow.addColorStop(0.8, 'rgba(245, 158, 11, 0.5)');
+                spinGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = spinGlow;
+                ctx.beginPath();
+                ctx.arc(0, 0, 66, 0, Math.PI * 2);
+                ctx.arc(0, 0, 26, 0, Math.PI * 2, true);
+                ctx.fill();
+
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(0, 0, 64, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+
+            } else if (this.comboIndex === 0) {
+                // COMBO 1: Swift Silver-Gold Crescent Slash
+                const swingAngle = -0.6 + attackProgress * 1.8;
+                ctx.rotate(swingAngle);
+
+                // Forged Steel Blade
+                const bladeGrad = ctx.createLinearGradient(0, -4, 46, 4);
+                bladeGrad.addColorStop(0, '#f8fafc');
+                bladeGrad.addColorStop(0.5, '#cbd5e1');
+                bladeGrad.addColorStop(1, '#94a3b8');
+                ctx.fillStyle = bladeGrad;
+                ctx.fillRect(0, -3.5, 46, 7);
+                // Fuller line
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(4, 0); ctx.lineTo(40, 0); ctx.stroke();
+
+                // Crossguard & Pommel
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(-5, -8, 5, 16);
+                ctx.beginPath(); ctx.arc(-7, 0, 3, 0, Math.PI*2); ctx.fill();
+
+                // Luminous Energy Blade Arc
+                ctx.save();
+                const arcGlow = ctx.createRadialGradient(0, 0, 30, 0, 0, 58);
+                arcGlow.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+                arcGlow.addColorStop(0.4, 'rgba(250, 204, 21, 0.85)');
+                arcGlow.addColorStop(0.8, 'rgba(249, 115, 22, 0.45)');
+                arcGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = arcGlow;
+                ctx.beginPath();
+                ctx.arc(0, 0, 56, -0.8, 0.8);
+                ctx.arc(0, 0, 32, 0.8, -0.8, true);
+                ctx.closePath();
+                ctx.fill();
+
+                // Crescent Sparkle edge
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.arc(0, 0, 54, -0.7, 0.7);
+                ctx.stroke();
+                ctx.restore();
+
+            } else if (this.comboIndex === 1) {
+                // COMBO 2: Rising Crimson Flame Uppercut Arc
+                const swingAngle = 0.9 - attackProgress * 2.0;
+                ctx.rotate(swingAngle);
+
+                // Blade
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, -4, 50, 8);
+                ctx.strokeStyle = '#f97316';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(0, -4, 50, 8);
+
+                // Crossguard
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(-5, -8, 5, 16);
+
+                // Fiery Flaming Upward Arc
+                ctx.save();
+                const flameGlow = ctx.createRadialGradient(0, 0, 32, 0, 0, 64);
+                flameGlow.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+                flameGlow.addColorStop(0.3, 'rgba(239, 68, 68, 0.85)');
+                flameGlow.addColorStop(0.7, 'rgba(249, 115, 22, 0.6)');
+                flameGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = flameGlow;
+                ctx.beginPath();
+                ctx.arc(0, 0, 62, 0.8, -1.0, true);
+                ctx.arc(0, 0, 34, -1.0, 0.8);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.strokeStyle = '#fde047';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(0, 0, 60, 0.7, -0.9, true);
+                ctx.stroke();
+                ctx.restore();
+
+            } else {
+                // COMBO 3: Colossal Earth-Splitting Heavens Cleave (Finisher)
+                const swingAngle = -1.3 + attackProgress * 2.7;
+                ctx.rotate(swingAngle);
+
+                // Massive Broadsword Blade
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, -5, 58, 10);
+                ctx.strokeStyle = '#dc2626';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(0, -5, 58, 10);
+
+                // Gold Crossguard
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillRect(-6, -11, 6, 22);
+                ctx.beginPath(); ctx.arc(-9, 0, 4, 0, Math.PI*2); ctx.fill();
+
+                // Colossal 150-degree Shockwave Arc
+                ctx.save();
+                const cleaveGlow = ctx.createRadialGradient(0, 0, 36, 0, 0, 78);
+                cleaveGlow.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+                cleaveGlow.addColorStop(0.3, 'rgba(250, 204, 21, 0.9)');
+                cleaveGlow.addColorStop(0.65, 'rgba(239, 68, 68, 0.75)');
+                cleaveGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = cleaveGlow;
+                ctx.beginPath();
+                ctx.arc(0, 0, 76, -1.3, 1.3);
+                ctx.arc(0, 0, 38, 1.3, -1.3, true);
+                ctx.closePath();
+                ctx.fill();
+
+                // Outer shockwave rings
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(0, 0, 74, -1.2, 1.2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            ctx.restore();
+        } else if (!this.isShielding) {
+            // Idle / Running Sword Sheathed at Hip
+            ctx.save();
+            ctx.translate(6, 26);
+            ctx.rotate(0.35 + (isRunning ? Math.sin(runCycle) * 0.15 : 0));
+            // Blade & Scabbard
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(0, -2, 34, 5);
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(0, -2, 34, 5);
+            // Hilt
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(-6, -5, 6, 10);
+            ctx.beginPath(); ctx.arc(-8, 0, 2.5, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
+        }
+
+        ctx.restore();
+
+        // 7. Render Lingering Radiant Slash Arc Ribbons in World Space
+        this.slashTrails.forEach(st => {
+            const sx = Math.round(st.x - camX);
+            const sy = Math.round(st.y - camY);
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.scale(st.facing, 1);
+            ctx.globalAlpha = st.alpha * 0.85;
+
+            const radius = st.isAerial ? 66 : (st.combo === 2 ? 78 : 56);
+            const arcGlow = ctx.createRadialGradient(0, 0, radius * 0.35, 0, 0, radius);
+
+            if (st.isAerial) {
+                arcGlow.addColorStop(0, '#ffffff');
+                arcGlow.addColorStop(0.4, '#38bdf8');
+                arcGlow.addColorStop(0.8, '#f59e0b');
+            } else if (st.combo === 1) {
+                arcGlow.addColorStop(0, '#ffffff');
+                arcGlow.addColorStop(0.4, '#ef4444');
+                arcGlow.addColorStop(0.8, '#f97316');
+            } else if (st.combo === 2) {
+                arcGlow.addColorStop(0, '#ffffff');
+                arcGlow.addColorStop(0.3, '#fbbf24');
+                arcGlow.addColorStop(0.7, '#dc2626');
+            } else {
+                arcGlow.addColorStop(0, '#ffffff');
+                arcGlow.addColorStop(0.4, '#fde047');
+                arcGlow.addColorStop(0.8, '#f97316');
+            }
+            arcGlow.addColorStop(1, 'rgba(0,0,0,0)');
+
+            ctx.fillStyle = arcGlow;
+            ctx.beginPath();
+            if (st.isAerial) {
+                ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                ctx.arc(0, 0, radius * 0.4, 0, Math.PI * 2, true);
+            } else if (st.combo === 1) {
+                ctx.arc(0, 0, radius, 0.7, -1.1, true);
+                ctx.arc(0, 0, radius * 0.4, -1.1, 0.7);
+            } else if (st.combo === 2) {
+                ctx.arc(0, 0, radius, -1.3, 1.3);
+                ctx.arc(0, 0, radius * 0.45, 1.3, -1.3, true);
+            } else {
+                ctx.arc(0, 0, radius, -0.9, 0.9);
+                ctx.arc(0, 0, radius * 0.4, 0.9, -0.9, true);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        });
+    }
+}
+
+/* ==========================================================================
+   THE COMPANION: ROYAL GOLDEN EAGLE (ԱՐՔՈՒՆԱԿԱՆ ԱՐԾԻՎ)
+   ========================================================================== */
+class RoyalEagleCompanion {
+    constructor() {
+        this.x = 100;
+        this.y = 180;
+        this.timer = 0;
+        this.facing = 1;
+        this.state = 'follow'; // 'follow', 'dive', 'return'
+        this.diveVx = 0;
+        this.diveVy = 0;
+        this.diveCooldown = 0;
+        this.diveTrail = [];
+    }
+
+    triggerDoubleJumpBoost() {
+        this.y = knight.y - 12;
+        this.x = knight.x + knight.w / 2;
+        for (let i = 0; i < 12; i++) {
+            spawnParticle(this.x, this.y, '#ffd700', (Math.random()-0.5)*6, (Math.random()-0.5)*6, 20, 3.5);
+        }
+    }
+
+    triggerDiveAttack() {
+        if (this.state === 'dive' || this.diveCooldown > 0) return;
+
+        let bestTarget = null;
+        let minDist = 750;
+        enemies.forEach(e => {
+            if (e.alive) {
+                const dist = Math.hypot(e.x - this.x, e.y - this.y);
+                if (dist < minDist) {
+                    minDist = dist;
+                    bestTarget = e;
+                }
+            }
+        });
+
+        this.state = 'dive';
+        this.diveCooldown = 55;
+        sound.eagleScreech();
+        triggerScreenShake(5);
+
+        if (bestTarget) {
+            const angle = Math.atan2((bestTarget.y + bestTarget.h/2) - this.y, (bestTarget.x + bestTarget.w/2) - this.x);
+            this.diveVx = Math.cos(angle) * 18;
+            this.diveVy = Math.sin(angle) * 18;
+            this.facing = this.diveVx >= 0 ? 1 : -1;
+        } else {
+            this.diveVx = knight.facing * 18;
+            this.diveVy = 8;
+            this.facing = knight.facing;
+        }
+
+        for (let i = 0; i < 14; i++) {
+            spawnParticle(this.x, this.y, '#ffd700', (Math.random()-0.5)*7, (Math.random()-0.5)*7, 22, 3);
+        }
+    }
+
+    update(targetKnight, items) {
+        this.timer += 0.08;
+        if (this.diveCooldown > 0) this.diveCooldown--;
+
+        if (this.state === 'dive') {
+            this.x += this.diveVx;
+            this.y += this.diveVy;
+            this.diveTrail.push({ x: this.x, y: this.y, alpha: 0.8 });
+
+            if (Math.random() < 0.7) {
+                spawnParticle(this.x, this.y, '#f39c12', (Math.random()-0.5)*4, (Math.random()-0.5)*4, 15, 3);
+            }
+
+            // Dive impact on enemies
+            enemies.forEach(e => {
+                if (e.alive && rectIntersect(this.x - 24, this.y - 18, 48, 36, e.x, e.y, e.w, e.h)) {
+                    e.takeDamage(2, this.diveVx > 0 ? 1 : -1);
+                    triggerScreenShake(7);
+                    spawnDamageText(e.x + e.w/2, e.y - 14, "🦅 ԱՐԾԻՎ! 2", "#f1c40f");
+                    for (let i = 0; i < 16; i++) {
+                        spawnParticle(e.x + e.w/2, e.y + e.h/2, '#ffd700', (Math.random()-0.5)*8, (Math.random()-0.5)*8, 22, 4);
+                    }
+                    this.state = 'return';
+                }
+            });
+
+            if (this.y > 620 || Math.hypot(this.x - targetKnight.x, this.y - targetKnight.y) > 750) {
+                this.state = 'return';
+            }
+        } else {
+            const offsetX = targetKnight.facing === 1 ? -48 : 48;
+            const hoverBob = Math.sin(this.timer * 2.2) * 14;
+
+            // Aerodynamic following
+            const targetX = targetKnight.x + offsetX;
+            const targetY = targetKnight.y - 44 + hoverBob;
+            this.x += (targetX - this.x) * 0.12;
+            this.y += (targetY - this.y) * 0.12;
+
+            if (targetKnight.x + offsetX > this.x + 3) this.facing = 1;
+            else if (targetKnight.x + offsetX < this.x - 3) this.facing = -1;
+
+            if (this.state === 'return' && Math.hypot(this.x - targetX, this.y - targetY) < 36) {
+                this.state = 'follow';
+            }
+
+            // Coin magnet fetch
+            items.forEach(it => {
+                if (!it.collected && it.type === 'coin') {
+                    if (Math.hypot(this.x - it.x, this.y - it.y) < 200) {
+                        it.x += (this.x - it.x) * 0.12;
+                        it.y += (this.y - it.y) * 0.12;
+                    }
+                }
+            });
+        }
+
+        // Decay dive trails
+        for (let i = this.diveTrail.length - 1; i >= 0; i--) {
+            this.diveTrail[i].alpha -= 0.1;
+            if (this.diveTrail[i].alpha <= 0) this.diveTrail.splice(i, 1);
+        }
+    }
+
+    draw(ctx, camX, camY) {
+        // Draw Golden Dive Comet Trail
+        this.diveTrail.forEach(t => {
+            ctx.save();
+            ctx.fillStyle = `rgba(243, 156, 18, ${t.alpha * 0.5})`;
+            ctx.beginPath();
+            ctx.arc(t.x - camX, t.y - camY, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        });
+
+        const screenX = Math.round(this.x - camX);
+        const screenY = Math.round(this.y - camY);
+
+        ctx.save();
+        ctx.translate(screenX, screenY);
+        ctx.scale(this.facing, 1);
+
+        if (this.state === 'dive') {
+            ctx.rotate(0.35);
+        }
+
+        const wingFlap = Math.sin(this.timer * 4.2) * 11;
+
+        // Golden Aura in Flight
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.22)';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 22, 14, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eagle Body
+        ctx.fillStyle = '#834c24';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 18, 11, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Feathered Wings with Golden Highlights
+        ctx.fillStyle = '#543016';
+        ctx.beginPath();
+        ctx.moveTo(-10, -2);
+        ctx.lineTo(-3, -24 + wingFlap);
+        ctx.lineTo(15, -2);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#d4a017';
+        ctx.beginPath();
+        ctx.moveTo(-7, -2);
+        ctx.lineTo(-3, -19 + wingFlap);
+        ctx.lineTo(10, -2);
+        ctx.closePath();
+        ctx.fill();
+
+        // White/Golden Head
+        ctx.fillStyle = '#fff4db';
+        ctx.beginPath();
+        ctx.arc(13, -4, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Curved Royal Golden Beak
+        ctx.fillStyle = '#f39c12';
+        ctx.beginPath();
+        ctx.moveTo(18, -6);
+        ctx.lineTo(26, -2);
+        ctx.lineTo(18, 1);
+        ctx.closePath();
+        ctx.fill();
+
+        // Fierce Eye
+        ctx.fillStyle = '#111';
+        ctx.fillRect(15, -6, 2.5, 2.5);
+
+        ctx.restore();
+    }
+}
+
+/* ==========================================================================
+   ENEMIES, ARROWS, POTS & COLLECTIBLES (MORTAL COMBAT / DEAD CELLS POLISH)
+   ========================================================================== */
+class ArmoredBrigand {
+    constructor(x, y, type = 'swordsman', patrolRange = 180) {
+        this.startX = x;
+        this.x = x;
+        this.y = y;
+        this.type = type;
+        this.w = type === 'boss' ? 44 : 34;
+        this.h = type === 'boss' ? 70 : 58;
+        this.vx = type === 'archer' ? 0 : 1.5;
+        this.vy = 0;
+        this.gravity = 0.65;
+        this.onGround = false;
+        this.patrolRange = patrolRange;
+        this.maxHp = type === 'archer' ? 2 : (type === 'boss' ? 10 : 3);
+        this.hp = this.maxHp;
+        this.alive = true;
+        this.facing = 1;
+        this.flashTimer = 0;
+        this.shootTimer = 95;
+        this.animTimer = Math.random() * 50;
+    }
+
+    takeDamage(dmg, dir) {
+        this.hp -= dmg;
+        this.flashTimer = 12;
+        this.vx = dir * 3.8;
+        this.vy = -3.5; // Slight knockback hop
+        if (this.hp <= 0) {
+            this.alive = false;
+            sound.coin();
+            const coinsCount = this.type === 'boss' ? 12 : (this.type === 'archer' ? 3 : 5);
+            for (let i = 0; i < coinsCount; i++) {
+                collectibles.push(new CollectibleItem(this.x + i * 14, this.y + 10, 'coin'));
+            }
+            if (this.type === 'boss') {
+                collectibles.push(new CollectibleItem(this.x + 20, this.y - 10, 'heart'));
+                triggerScreenShake(14);
+            }
+        }
+    }
+
+    update(platforms, player) {
+        if (!this.alive) return;
+        this.animTimer++;
+        if (this.flashTimer > 0) this.flashTimer--;
+
+        // 1. Vertical Gravity & Solid Platform Collision (Stops floating in air!)
+        this.vy += this.gravity;
+        this.y += this.vy;
+
+        this.onGround = false;
+        platforms.forEach(p => {
+            if (rectIntersect(this.x, this.y, this.w, this.h, p.x, p.y, p.w, p.h)) {
+                if (this.vy > 0 && this.y + this.h - this.vy <= p.y + 16) {
+                    this.y = p.y - this.h;
+                    this.vy = 0;
+                    this.onGround = true;
+                }
+            }
+        });
+
+        // 2. Horizontal Movement with Smart Ledge/Edge Detection
+        if (this.type !== 'archer') {
+            // Check if there is platform beneath the next step (turn around if reaching an edge!)
+            const nextX = this.vx > 0 ? this.x + this.w + 10 : this.x - 10;
+            let hasFloorAhead = false;
+            platforms.forEach(p => {
+                if (nextX >= p.x && nextX <= p.x + p.w && this.y + this.h >= p.y - 4 && this.y + this.h <= p.y + 16) {
+                    hasFloorAhead = true;
+                }
+            });
+
+            // Turn around if no floor ahead (prevents walking into thin air) or reached patrol limit
+            if (this.onGround && !hasFloorAhead) {
+                this.vx = -this.vx;
+                this.facing = this.vx > 0 ? 1 : -1;
+            } else if (this.x > this.startX + this.patrolRange) {
+                this.vx = -Math.abs(this.vx);
+                this.facing = -1;
+            } else if (this.x < this.startX) {
+                this.vx = Math.abs(this.vx);
+                this.facing = 1;
+            }
+
+            this.x += this.vx;
+
+            if (rectIntersect(this.x, this.y, this.w, this.h, player.x, player.y, player.w, player.h)) {
+                player.takeDamage(this.type === 'boss' ? 2 : 1, this.facing);
+            }
+        } else {
+            // Archer stays stationary on platform, aims and shoots
+            this.facing = player.x > this.x ? 1 : -1;
+            this.shootTimer--;
+            if (this.shootTimer <= 0 && Math.abs(player.x - this.x) < 580) {
+                this.shootTimer = 130;
+                arrows.push(new Arrow(this.x + (this.facing === 1 ? 32 : -12), this.y + 22, this.facing * 5.8));
+            }
+        }
+    }
+
+    draw(ctx, camX, camY) {
+        if (!this.alive) return;
+        const screenX = Math.round(this.x - camX);
+        const screenY = Math.round(this.y - camY);
+
+        // Overhead Health Bar
+        const hpBarW = this.type === 'boss' ? 56 : 32;
+        const hpBarX = screenX + this.w / 2 - hpBarW / 2;
+        const hpBarY = screenY - 14;
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(hpBarX, hpBarY, hpBarW, 5);
+        ctx.fillStyle = this.type === 'boss' ? '#e74c3c' : '#2ecc71';
+        ctx.fillRect(hpBarX, hpBarY, (this.hp / this.maxHp) * hpBarW, 5);
+        ctx.strokeStyle = '#d4a017';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(hpBarX, hpBarY, hpBarW, 5);
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(screenX + this.w / 2, screenY + this.h);
+        ctx.scale(this.facing, 1);
+        ctx.translate(0, -this.h);
+
+        // White Flash on Hit
+        if (this.flashTimer > 0) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-this.w/2, 0, this.w, this.h);
+            ctx.restore();
+            return;
+        }
+
+        const walkBob = Math.sin(this.animTimer * 0.28) * 2;
+
+        if (this.type === 'boss') {
+            // BOSS: ԽԱՎԱՐԻ ԱՍՊԵՏ (DARK KNIGHT) - HIGH SPECULAR SHADING & OBSIDIAN PLATES
+            // Menacing Dark Pulsing Aura
+            ctx.save();
+            const darkAura = ctx.createRadialGradient(0, 36, 10, 0, 36, 42);
+            darkAura.addColorStop(0, 'rgba(168, 85, 247, 0.35)');
+            darkAura.addColorStop(0.6, 'rgba(88, 28, 135, 0.15)');
+            darkAura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = darkAura;
+            ctx.beginPath();
+            ctx.arc(0, 36, 44, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // Tattered Royal Dark Cloak with Bezier Folds
+            ctx.fillStyle = '#2e1065';
+            ctx.beginPath();
+            ctx.moveTo(-16, 20);
+            ctx.quadraticCurveTo(-26 + Math.sin(this.animTimer * 0.15) * 6, 42, -32, 68);
+            ctx.lineTo(-10, 68);
+            ctx.lineTo(-4, 26);
+            ctx.closePath();
+            ctx.fill();
+
+            // Obsidian Plate Greaves & Sabatons
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.moveTo(-12, 44); ctx.lineTo(-15, 64 + walkBob); ctx.lineTo(-4, 64 + walkBob); ctx.lineTo(-2, 44); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(3, 44); ctx.lineTo(1, 64 - walkBob); ctx.lineTo(13, 64 - walkBob); ctx.lineTo(11, 44); ctx.fill();
+
+            // Spiked Obsidian Cuirass
+            const bossCuirass = ctx.createLinearGradient(-18, 16, 18, 44);
+            bossCuirass.addColorStop(0, '#334155');
+            bossCuirass.addColorStop(0.5, '#1e1b4b');
+            bossCuirass.addColorStop(1, '#0f172a');
+            ctx.fillStyle = bossCuirass;
+            ctx.beginPath();
+            ctx.moveTo(-16, 18);
+            ctx.quadraticCurveTo(0, 16, 16, 18);
+            ctx.lineTo(14, 44);
+            ctx.lineTo(-14, 44);
+            ctx.closePath();
+            ctx.fill();
+
+            // Cursed Purple Runic Inlay
+            ctx.strokeStyle = '#c084fc';
+            ctx.lineWidth = 1.8;
+            ctx.shadowColor = '#a855f7';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.moveTo(0, 22); ctx.lineTo(0, 40);
+            ctx.moveTo(-8, 30); ctx.lineTo(8, 30);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Spiked Curved Pauldrons
+            ctx.fillStyle = '#1e1b4b';
+            ctx.beginPath(); ctx.ellipse(-18, 20, 9, 10, -0.2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(18, 20, 9, 10, 0.2, 0, Math.PI*2); ctx.fill();
+            // Spikes
+            ctx.fillStyle = '#e2e8f0';
+            ctx.beginPath(); ctx.moveTo(-22, 18); ctx.lineTo(-28, 10); ctx.lineTo(-18, 14); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(22, 18); ctx.lineTo(28, 10); ctx.lineTo(18, 14); ctx.fill();
+
+            // Horned Dark Greathelm
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(0, 10, 13, Math.PI, 0);
+            ctx.quadraticCurveTo(12, 20, 0, 22);
+            ctx.quadraticCurveTo(-12, 20, -12, 10);
+            ctx.closePath();
+            ctx.fill();
+
+            // Curved Horns
+            ctx.fillStyle = '#581c87';
+            ctx.beginPath();
+            ctx.moveTo(-10, 6); ctx.quadraticCurveTo(-20, -4, -26, -10); ctx.quadraticCurveTo(-14, -2, -6, 2); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(10, 6); ctx.quadraticCurveTo(20, -4, 26, -10); ctx.quadraticCurveTo(14, -2, 6, 2); ctx.fill();
+
+            // Glowing Crimson Menacing Eye Slits
+            ctx.fillStyle = '#ef4444';
+            ctx.shadowColor = '#dc2626';
+            ctx.shadowBlur = 8;
+            ctx.fillRect(2, 9, 8, 3);
+            ctx.shadowBlur = 0;
+
+            // Giant Cursed Executioner Blade
+            ctx.save();
+            ctx.translate(18, 24);
+            ctx.rotate(0.2);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, -6, 52, 12);
+            ctx.strokeStyle = '#c084fc';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(0, -6, 52, 12);
+            ctx.fillStyle = '#a855f7';
+            ctx.fillRect(4, -2, 44, 4);
+            ctx.fillStyle = '#d97706';
+            ctx.fillRect(-6, -12, 6, 24);
+            ctx.restore();
+
+        } else if (this.type === 'archer') {
+            // ARCHER: ՆԵՏԱՁԻԳ - DETAILED LEATHER ARMOR & CURVED RECURVE BOW
+            // Legs in leather hose
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.moveTo(-9, 40); ctx.lineTo(-10, 58 + walkBob); ctx.lineTo(-3, 58 + walkBob); ctx.lineTo(-2, 40); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(2, 40); ctx.lineTo(3, 58 - walkBob); ctx.lineTo(10, 58 - walkBob); ctx.lineTo(9, 40); ctx.fill();
+
+            // Hardened Leather Tunic
+            const archerTunic = ctx.createLinearGradient(-12, 16, 12, 42);
+            archerTunic.addColorStop(0, '#334155');
+            archerTunic.addColorStop(1, '#0f172a');
+            ctx.fillStyle = archerTunic;
+            ctx.beginPath();
+            ctx.moveTo(-11, 18); ctx.lineTo(11, 18); ctx.lineTo(9, 42); ctx.lineTo(-9, 42); ctx.closePath(); ctx.fill();
+
+            // Quiver on Back with feather fletchings
+            ctx.fillStyle = '#78350f';
+            ctx.beginPath(); ctx.moveTo(-14, 14); ctx.lineTo(-7, 36); ctx.lineTo(-3, 34); ctx.lineTo(-10, 12); ctx.fill();
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(-13, 8, 3, 5); ctx.fillRect(-10, 7, 3, 5);
+
+            // Hooded Helmet
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath(); ctx.arc(0, 9, 10, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(2, 8, 5, 2.5); // Keen eye
+
+            // Classical Recurve Bow in Hands
+            ctx.strokeStyle = '#92400e';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(16, 26, 18, -1.2, 1.2);
+            ctx.stroke();
+
+            // Taut String & Arrow
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(23, 10); ctx.lineTo(11, 26); ctx.lineTo(23, 42);
+            ctx.stroke();
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(11, 25, 20, 2);
+
+        } else {
+            // SWORDSMAN: ԶՐԱՀԱՎՈՐ ՌԱԶՄԻԿ - CURVED BRIGANDINE & DRAWN STEEL SCIMITAR
+            // Articulated legs
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.moveTo(-8, 38); ctx.lineTo(-10, 56 + walkBob); ctx.lineTo(-3, 56 + walkBob); ctx.lineTo(-1, 38); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(2, 38); ctx.lineTo(2, 56 - walkBob); ctx.lineTo(9, 56 - walkBob); ctx.lineTo(9, 38); ctx.fill();
+
+            // Curved Brigandine Armor with Rivets
+            const brigandGrad = ctx.createLinearGradient(-12, 16, 12, 40);
+            brigandGrad.addColorStop(0, '#573024');
+            brigandGrad.addColorStop(1, '#2c140e');
+            ctx.fillStyle = brigandGrad;
+            ctx.beginPath();
+            ctx.moveTo(-11, 16); ctx.lineTo(11, 16); ctx.lineTo(9, 39); ctx.lineTo(-9, 39); ctx.closePath(); ctx.fill();
+
+            // Steel chest plate insert
+            ctx.fillStyle = '#64748b';
+            ctx.beginPath(); ctx.arc(0, 26, 7, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 1; ctx.stroke();
+
+            // Iron Helmet with Nasal Bar
+            ctx.fillStyle = '#64748b';
+            ctx.beginPath();
+            ctx.arc(0, 9, 10, Math.PI, 0);
+            ctx.lineTo(8, 17); ctx.lineTo(-8, 17);
+            ctx.closePath();
+            ctx.fill();
+
+            // Menacing Red Visor Slit
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(2, 8, 6, 2.5);
+
+            // Drawn Steel Scimitar Sword (Curved blade)
+            ctx.fillStyle = '#f8fafc';
+            ctx.beginPath();
+            ctx.moveTo(10, 24);
+            ctx.quadraticCurveTo(24, 23, 34, 18);
+            ctx.lineTo(33, 22);
+            ctx.quadraticCurveTo(22, 28, 10, 28);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#d97706';
+            ctx.fillRect(7, 21, 4, 10);
+        }
+
+        ctx.restore();
+    }
+}
+
+class Arrow {
+    constructor(x, y, vx) { this.x = x; this.y = y; this.vx = vx; this.w = 20; this.h = 4; this.active = true; }
+    update(player) {
+        if (!this.active) return;
+        this.x += this.vx;
+        if (rectIntersect(this.x, this.y, this.w, this.h, player.x, player.y, player.w, player.h)) {
+            this.active = false;
+            player.takeDamage(1, this.vx > 0 ? 1 : -1);
+        }
+        if (Math.abs(this.x - player.x) > 900) this.active = false;
+    }
+    draw(ctx, camX, camY) {
+        if (!this.active) return;
+        ctx.fillStyle = '#bdc3c7';
+        ctx.fillRect(this.x - camX, this.y - camY, this.w, this.h);
+    }
+}
+
+class ClayPot {
+    constructor(x, y) { this.x = x; this.y = y; this.w = 26; this.h = 32; this.broken = false; }
+    shatter() {
+        if (this.broken) return;
+        this.broken = true;
+        collectibles.push(new CollectibleItem(this.x + 4, this.y + 4, Math.random() > 0.4 ? 'coin' : 'heart'));
+        for (let i = 0; i < 8; i++) spawnParticle(this.x + 13, this.y + 16, '#c07d53', (Math.random()-0.5)*5, -Math.random()*4, 20, 3.5);
+    }
+    draw(ctx, camX, camY) {
+        if (this.broken) return;
+        const sx = this.x - camX;
+        const sy = this.y - camY;
+        ctx.fillStyle = '#b3673f';
+        ctx.beginPath();
+        ctx.ellipse(sx + 13, sy + 18, 12, 13, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillRect(sx + 7, sy + 2, 12, 6);
+    }
+}
+
+class CollectibleItem {
+    constructor(x, y, type) {
+        this.x = x;
+        this.y = y;
+        this.w = 28;
+        this.h = 28;
+        this.type = type;
+        this.collected = false;
+        this.hoverOffset = Math.random() * Math.PI * 2;
+    }
+    update(player) {
+        if (this.collected) return;
+        this.hoverOffset += 0.06;
+        if (rectIntersect(this.x, this.y, this.w, this.h, player.x, player.y, player.w, player.h)) {
+            this.collected = true;
+            const currentCity = CITIES_DATA.find(c => c.id === gameState.currentCityId) || CITIES_DATA[0];
+
+            if (this.type === 'coin') {
+                gameState.coins++;
+                sound.coin();
+                for (let i = 0; i < 7; i++) spawnParticle(this.x+14, this.y+14, '#ffd700', (Math.random()-0.5)*3.5, (Math.random()-0.5)*3.5, 20, 3);
+            } else if (this.type === 'heart') {
+                if (player.hp < player.maxHp) player.hp++;
+                sound.heart();
+                for (let i = 0; i < 8; i++) spawnParticle(this.x+14, this.y+14, '#e74c3c', (Math.random()-0.5)*4, (Math.random()-0.5)*4, 25, 4);
+            } else if (this.type === 'shard') {
+                if (!gameState.shards.includes(currentCity.shardIndex)) {
+                    gameState.shards.push(currentCity.shardIndex);
+                }
+                sound.shardFound();
+                triggerScreenShake(12);
+
+                // Unlock next city!
+                const nextId = gameState.currentCityId + 1;
+                if (nextId <= 7 && !gameState.unlocked.includes(nextId)) {
+                    gameState.unlocked.push(nextId);
+                }
+                saveCurrentProgress();
+
+                showStoryModal(
+                    `👑 ${currentCity.name}ի Թագի Կտորը Գտնվեց!`,
+                    `Փա՜ռք քաջարի Ասպետին։ Դուք ազատագրեցիք ${currentCity.name}ը և վերադարձրիք Թագի կտորը։\n\nՔարտեզի վրա բացվեց հաջորդ քաղաքը։ Շարունակեք ճանապարհը դեպի երկրի լիակատար միասնություն։`
+                );
+            } else if (this.type === 'scroll') {
+                sound.shardFound();
+                showStoryModal(`📜 ${currentCity.name}ի Գաղտնի Մատյանը`, currentCity.fact);
+            }
+            updateHUD();
+        }
+    }
+    draw(ctx, camX, camY) {
+        if (this.collected) return;
+        const screenX = Math.round(this.x - camX);
+        const screenY = Math.round(this.y - camY + Math.sin(this.hoverOffset) * 5);
+        ctx.save();
+        ctx.translate(screenX + 14, screenY + 14);
+
+        if (this.type === 'coin') {
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            ctx.arc(0, 0, 11, 0, Math.PI*2);
+            ctx.fill();
+            ctx.strokeStyle = '#b7950b';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        } else if (this.type === 'heart') {
+            // Pomegranate fruit heart
+            ctx.fillStyle = '#c0392b';
+            ctx.beginPath();
+            ctx.arc(0, 2, 11, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = '#962d22';
+            ctx.beginPath();
+            ctx.moveTo(-5, -8);
+            ctx.lineTo(-2, -14);
+            ctx.lineTo(0, -9);
+            ctx.lineTo(2, -14);
+            ctx.lineTo(5, -8);
+            ctx.closePath();
+            ctx.fill();
+        } else if (this.type === 'shard') {
+            // Royal Crown Piece
+            ctx.fillStyle = '#ffd700';
+            ctx.shadowColor = '#f39c12';
+            ctx.shadowBlur = 18;
+            ctx.beginPath();
+            ctx.moveTo(-13, 11);
+            ctx.lineTo(-13, -5);
+            ctx.lineTo(-6, 2);
+            ctx.lineTo(0, -14);
+            ctx.lineTo(6, 2);
+            ctx.lineTo(13, -5);
+            ctx.lineTo(13, 11);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.arc(0, 3, 3.5, 0, Math.PI*2);
+            ctx.fill();
+        } else if (this.type === 'scroll') {
+            ctx.fillStyle = '#f4e0aa';
+            ctx.fillRect(-10, -11, 20, 22);
+            ctx.fillStyle = '#8b5a2b';
+            ctx.fillRect(-12, -13, 24, 3);
+            ctx.fillRect(-12, 10, 24, 3);
+        }
+        ctx.restore();
+    }
+}
+
+function rectIntersect(x1, y1, w1, h1, x2, y2, w2, h2) {
+    return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
+}
+
+/* ==========================================================================
+   ADVENTURE OBJECTS: TORCHES, TREASURE CHESTS, SPIKE TRAPS & ANCIENT KHACHKARS
+   ========================================================================== */
+class WallTorch {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.flameTimer = Math.random() * 100;
+    }
+    update() {
+        this.flameTimer += 0.15;
+        if (Math.random() < 0.22) {
+            spawnParticle(this.x, this.y - 12, '#f39c12', (Math.random()-0.5)*1.2, -Math.random()*1.8, 16, 2);
+        }
+    }
+    draw(ctx, camX, camY) {
+        const sx = Math.round(this.x - camX);
+        const sy = Math.round(this.y - camY);
+
+        // Warm radial dynamic glow halo
+        const flicker = Math.sin(this.flameTimer * 3.5) * 6;
+        const glow = ctx.createRadialGradient(sx, sy - 10, 4, sx, sy - 10, 75 + flicker);
+        glow.addColorStop(0, 'rgba(255, 170, 40, 0.32)');
+        glow.addColorStop(0.5, 'rgba(230, 100, 20, 0.10)');
+        glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(sx, sy - 10, 76 + flicker, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Iron Wall Sconce Bracket
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(sx - 3, sy, 6, 16);
+        ctx.fillRect(sx - 7, sy + 12, 14, 4);
+
+        // Brazier Cup
+        ctx.fillStyle = '#7f8c8d';
+        ctx.beginPath();
+        ctx.moveTo(sx - 7, sy);
+        ctx.lineTo(sx + 7, sy);
+        ctx.lineTo(sx + 4, sy + 7);
+        ctx.lineTo(sx - 4, sy + 7);
+        ctx.closePath();
+        ctx.fill();
+
+        // Flickering Multi-tier Flame
+        const flameBob = Math.sin(this.flameTimer * 4) * 2;
+        ctx.fillStyle = '#e67e22';
+        ctx.beginPath();
+        ctx.ellipse(sx, sy - 6 + flameBob, 5, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f1c40f';
+        ctx.beginPath();
+        ctx.ellipse(sx, sy - 5 + flameBob, 3, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(sx, sy - 4 + flameBob, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+class TreasureChest {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.w = 40;
+        this.h = 28;
+        this.opened = false;
+        this.sparkleTimer = 0;
+    }
+    open() {
+        if (this.opened) return;
+        this.opened = true;
+        sound.shardFound();
+        triggerScreenShake(8);
+        spawnDamageText(this.x + 20, this.y - 14, "👑 ԱՐՔՈՒՆԱԿԱՆ ԳԱՆՁ!", "#ffd700");
+        // Erupt with treasures: 7 gold coins + 1 pomegranate heart
+        for (let i = 0; i < 7; i++) {
+            collectibles.push(new CollectibleItem(this.x - 25 + i * 14, this.y - 15 - Math.random() * 20, 'coin'));
+        }
+        collectibles.push(new CollectibleItem(this.x + 6, this.y - 32, 'heart'));
+        for (let i = 0; i < 28; i++) {
+            spawnParticle(this.x + 20, this.y + 10, '#ffd700', (Math.random()-0.5)*9, -Math.random()*7, 34, 4);
+        }
+    }
+    update(player) {
+        this.sparkleTimer++;
+        if (!this.opened && this.sparkleTimer % 18 === 0) {
+            spawnParticle(this.x + Math.random()*this.w, this.y + Math.random()*this.h, '#ffd700', 0, -1, 16, 2);
+        }
+        if (!this.opened && rectIntersect(player.x - 8, player.y - 8, player.w + 16, player.h + 16, this.x, this.y, this.w, this.h)) {
+            if (player.isAttacking || player.isDashing) {
+                this.open();
+            }
+        }
+    }
+    draw(ctx, camX, camY) {
+        const sx = Math.round(this.x - camX);
+        const sy = Math.round(this.y - camY);
+
+        ctx.save();
+        // Chest Base (Ancient carved wood & bronze)
+        ctx.fillStyle = '#5c3a21';
+        ctx.fillRect(sx, sy + 10, this.w, this.h - 10);
+        // Bronze reinforcing bands
+        ctx.fillStyle = '#d4af37';
+        ctx.fillRect(sx + 5, sy + 10, 4, this.h - 10);
+        ctx.fillRect(sx + this.w - 9, sy + 10, 4, this.h - 10);
+        ctx.fillRect(sx, sy + 18, this.w, 3);
+
+        // Keyhole plate
+        ctx.fillStyle = '#111';
+        ctx.fillRect(sx + this.w/2 - 2, sy + 15, 4, 6);
+
+        // Chest Lid
+        if (!this.opened) {
+            ctx.fillStyle = '#784c28';
+            ctx.fillRect(sx - 2, sy, this.w + 4, 12);
+            ctx.fillStyle = '#ffd700';
+            ctx.fillRect(sx + 5, sy, 4, 12);
+            ctx.fillRect(sx + this.w - 9, sy, 4, 12);
+        } else {
+            // Open lid tilted back
+            ctx.fillStyle = '#784c28';
+            ctx.fillRect(sx - 4, sy - 14, this.w + 8, 12);
+            // Golden Glow from inside
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.45)';
+            ctx.fillRect(sx + 2, sy + 2, this.w - 4, 10);
+        }
+        ctx.restore();
+    }
+}
+
+class SpikeTrap {
+    constructor(x, y, w = 50) {
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = 16;
+        this.cooldown = 0;
+    }
+    update(player) {
+        if (this.cooldown > 0) this.cooldown--;
+        if (this.cooldown <= 0 && rectIntersect(player.x, player.y, player.w, player.h, this.x, this.y + 4, this.w, this.h - 4)) {
+            player.takeDamage(1, player.facing);
+            spawnDamageText(player.x + player.w/2, player.y - 12, "TRAP! 1", "#e74c3c");
+            this.cooldown = 40;
+        }
+    }
+    draw(ctx, camX, camY) {
+        const sx = Math.round(this.x - camX);
+        const sy = Math.round(this.y - camY);
+        ctx.save();
+        // Bronze base plate
+        ctx.fillStyle = '#2c3e50';
+        ctx.fillRect(sx, sy + 10, this.w, 6);
+        // Triangular sharp bronze spikes
+        ctx.fillStyle = '#95a5a6';
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 1;
+        for (let bx = 0; bx < this.w; bx += 12) {
+            ctx.beginPath();
+            ctx.moveTo(sx + bx, sy + 10);
+            ctx.lineTo(sx + bx + 6, sy);
+            ctx.lineTo(sx + bx + 12, sy + 10);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+}
+
+class AncientShrineKhachkar {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.w = 36;
+        this.h = 62;
+        this.activated = false;
+        this.timer = 0;
+    }
+    update(player) {
+        this.timer += 0.05;
+        if (!this.activated && rectIntersect(player.x, player.y, player.w, player.h, this.x - 16, this.y, this.w + 32, this.h)) {
+            this.activated = true;
+            player.hp = player.maxHp;
+            sound.shardFound();
+            triggerScreenShake(8);
+            spawnDamageText(this.x + 18, this.y - 18, "✨ ՍՈՒՐԲ ՕՐՀՆՈՒԹՅՈՒՆ (MAX HP)", "#ffd700");
+            for (let i = 0; i < 32; i++) {
+                spawnParticle(this.x + 18, this.y + 20, '#ffd700', (Math.random()-0.5)*8, (Math.random()-0.5)*8, 36, 4);
+            }
+            updateHUD();
+        }
+    }
+    draw(ctx, camX, camY) {
+        const sx = Math.round(this.x - camX);
+        const sy = Math.round(this.y - camY);
+        ctx.save();
+        // Holy aura glow
+        const glowPulse = Math.sin(this.timer * 3) * 6;
+        const glow = ctx.createRadialGradient(sx + 18, sy + 25, 4, sx + 18, sy + 25, 44 + glowPulse);
+        glow.addColorStop(0, this.activated ? 'rgba(255, 215, 0, 0.45)' : 'rgba(230, 126, 34, 0.3)');
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(sx + 18, sy + 25, 46 + glowPulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tuff Stone Slab (Խաչքար)
+        ctx.fillStyle = '#8d4925';
+        ctx.fillRect(sx, sy, this.w, this.h);
+        ctx.beginPath();
+        ctx.arc(sx + this.w/2, sy, this.w/2, Math.PI, 0);
+        ctx.fill();
+
+        // Carved Armenian Cross & Arevakhach in Gold
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(sx + this.w/2, sy - 8);
+        ctx.lineTo(sx + this.w/2, sy + 40);
+        ctx.moveTo(sx + 6, sy + 15);
+        ctx.lineTo(sx + this.w - 6, sy + 15);
+        ctx.stroke();
+
+        // Solar Rosette at bottom
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(sx + this.w/2, sy + 47, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+}
+
+/* ==========================================================================
+   LEVEL BUILDER FOR ALL 7 HISTORIC CITIES (~3200px LONG MAPS)
+   ========================================================================== */
+let knight = new ArmenianKnight(100, 280);
+let eagle = new RoyalEagleCompanion();
+let platforms = [];
+let enemies = [];
+let arrows = [];
+let vases = [];
+let collectibles = [];
+let torches = [];
+let chests = [];
+let traps = [];
+let shrines = [];
+let ambientLeaves = [];
+
+function loadCityWorld(cityId) {
+    knight.x = 100;
+    knight.y = 280;
+    knight.vx = 0;
+    knight.vy = 0;
+    knight.hp = knight.maxHp;
+
+    platforms = [];
+    enemies = [];
+    arrows = [];
+    vases = [];
+    collectibles = [];
+    torches = [];
+    chests = [];
+    traps = [];
+    shrines = [];
+    ambientLeaves = [];
+
+    // Ambient floating nature leaves/petals in the breeze
+    for (let i = 0; i < 35; i++) {
+        ambientLeaves.push({
+            x: Math.random() * 3200,
+            y: Math.random() * 520,
+            size: Math.random() * 4 + 3,
+            vx: Math.random() * 1.4 + 0.8,
+            vy: Math.random() * 0.5 + 0.2,
+            rot: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 0.05,
+            color: Math.random() > 0.4 ? '#27ae60' : (Math.random() > 0.5 ? '#f39c12' : '#2ecc71')
+        });
+    }
+
+    const city = CITIES_DATA.find(c => c.id === cityId) || CITIES_DATA[0];
+
+    // Solid main ground across the realm
+    platforms.push(
+        { x: 0, y: 440, w: 1000, h: 100 },
+        { x: 1080, y: 440, w: 900, h: 100 },
+        { x: 2060, y: 440, w: 1200, h: 100 }
+    );
+
+    // City custom platform layouts & adventure objects
+    if (cityId === 1) { // Երվանդաշատ (Ancient Capital)
+        platforms.push(
+            { x: 280, y: 340, w: 160, h: 24 },
+            { x: 500, y: 260, w: 180, h: 24 },
+            { x: 740, y: 320, w: 170, h: 24 },
+            { x: 1200, y: 290, w: 190, h: 24 },
+            { x: 1460, y: 220, w: 200, h: 24 },
+            { x: 1740, y: 290, w: 180, h: 24 },
+            { x: 2100, y: 340, w: 170, h: 24 },
+            { x: 2360, y: 260, w: 220, h: 24 },
+            { x: 2660, y: 190, w: 260, h: 26 }
+        );
+
+        // Ancient Wall Torches with warm ambient light
+        torches.push(
+            new WallTorch(340, 316),
+            new WallTorch(560, 236),
+            new WallTorch(1260, 266),
+            new WallTorch(1520, 196),
+            new WallTorch(1820, 266),
+            new WallTorch(2200, 316),
+            new WallTorch(2460, 236)
+        );
+
+        // Ancient Royal Treasure Chests (Strike to open!)
+        chests.push(
+            new TreasureChest(620, 232),
+            new TreasureChest(1840, 262),
+            new TreasureChest(2500, 232)
+        );
+
+        // Bronze Spike Traps in deep gaps
+        traps.push(
+            new SpikeTrap(1005, 470, 70),
+            new SpikeTrap(1985, 470, 70)
+        );
+
+        // Sacred Ancient Khachkar (Heals to Max HP & blesses)
+        shrines.push(
+            new AncientShrineKhachkar(1570, 158)
+        );
+
+    } else if (cityId === 2) { // Արտաշատ
+        platforms.push(
+            { x: 260, y: 320, w: 140, h: 24 },
+            { x: 460, y: 240, w: 140, h: 24 },
+            { x: 680, y: 180, w: 180, h: 24 },
+            { x: 940, y: 260, w: 130, h: 24 },
+            { x: 1180, y: 320, w: 200, h: 24 },
+            { x: 1460, y: 250, w: 160, h: 24 },
+            { x: 1720, y: 180, w: 220, h: 24 },
+            { x: 2100, y: 280, w: 180, h: 24 },
+            { x: 2400, y: 210, w: 240, h: 24 },
+            { x: 2750, y: 160, w: 200, h: 26 }
+        );
+        torches.push(new WallTorch(480, 216), new WallTorch(1200, 296), new WallTorch(2120, 256));
+        chests.push(new TreasureChest(720, 152), new TreasureChest(2480, 182));
+        traps.push(new SpikeTrap(1005, 470, 70), new SpikeTrap(1985, 470, 70));
+        shrines.push(new AncientShrineKhachkar(1780, 118));
+    } else { // Cities 3, 4, 5, 6, 7
+        platforms.push(
+            { x: 260, y: 330, w: 180, h: 24 },
+            { x: 520, y: 250, w: 200, h: 24 },
+            { x: 800, y: 190, w: 220, h: 24 },
+            { x: 1120, y: 270, w: 200, h: 24 },
+            { x: 1440, y: 200, w: 220, h: 24 },
+            { x: 1760, y: 290, w: 190, h: 24 },
+            { x: 2100, y: 230, w: 230, h: 24 },
+            { x: 2440, y: 170, w: 250, h: 24 },
+            { x: 2780, y: 140, w: 260, h: 26 }
+        );
+        torches.push(new WallTorch(540, 226), new WallTorch(1140, 246), new WallTorch(2120, 206));
+        chests.push(new TreasureChest(840, 162), new TreasureChest(2480, 142));
+        traps.push(new SpikeTrap(1005, 470, 70), new SpikeTrap(1985, 470, 70));
+        shrines.push(new AncientShrineKhachkar(1480, 138));
+    }
+
+    // Enemies solidly positioned on ground & platforms with realistic physics & edge detection
+    enemies.push(
+        new ArmoredBrigand(380, 380, 'swordsman', 250), // Ground fortress patrol (on ground y=440)
+        new ArmoredBrigand(540, 200, 'archer', 0),       // Watchtower archer (on platform y=260)
+        new ArmoredBrigand(1260, 380, 'swordsman', 240), // Bridge approach patrol (on ground y=440)
+        new ArmoredBrigand(1500, 160, 'archer', 0),      // Balcony archer (on platform y=220)
+        new ArmoredBrigand(2160, 380, 'swordsman', 220), // Citadel approach patrol (on ground y=440)
+        new ArmoredBrigand(2420, 200, cityId === 7 ? 'boss' : 'swordsman', 160) // High rampart guard / Boss
+    );
+
+    // Clay Pots
+    vases.push(
+        new ClayPot(340, 298),
+        new ClayPot(580, 218),
+        new ClayPot(1270, 248),
+        new ClayPot(1550, 178),
+        new ClayPot(2440, 208)
+    );
+
+    // Collectibles & Historical Lore Scroll
+    collectibles.push(
+        new CollectibleItem(300, 290, 'coin'),
+        new CollectibleItem(330, 290, 'coin'),
+        new CollectibleItem(780, 260, 'scroll'), // Historic City Scroll
+        new CollectibleItem(1230, 230, 'heart'),
+        new CollectibleItem(1510, 160, 'coin'),
+        new CollectibleItem(1550, 160, 'coin'),
+        new CollectibleItem(2130, 280, 'coin')
+    );
+
+    // Crown Shard if this city contains one
+    if (city.hasShard) {
+        collectibles.push(new CollectibleItem(2840, 110, 'shard'));
+    }
+}
+
+/* ==========================================================================
+   HUD UPDATE
+   ========================================================================== */
+function updateHUD() {
+    for (let i = 1; i <= 3; i++) {
+        const el = document.getElementById(`pom-${i}`);
+        if (el) {
+            if (i <= knight.hp) el.classList.remove('empty');
+            else el.classList.add('empty');
+        }
+    }
+    for (let s = 1; s <= 5; s++) {
+        const shardEl = document.getElementById(`shard-${s}`);
+        if (shardEl) {
+            if (gameState.shards.includes(s)) shardEl.classList.add('active');
+            else shardEl.classList.remove('active');
+        }
+    }
+    document.getElementById('coins-val').textContent = gameState.coins;
+}
+
+/* ==========================================================================
+   DYNAMIC BACKGROUND FOR ALL 7 CITIES
+   ========================================================================== */
+function drawLivingBackground(ctx, camX, camY) {
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // Level 1: Ancient Yervandashat Single Continuous Panoramic Painting (Zero repeat, zero cuts)
+    if (gameState.currentCityId === 1 && bgLoaded) {
+        // Continuous, Non-Repeating Single Panoramic Painting
+        const maxLevelScroll = Math.max(1, 2900 - W / viewScale);
+        const progress = Math.min(1, Math.max(0, camX / maxLevelScroll));
+
+        // Scale background to cover entire screen width plus horizontal parallax travel buffer
+        const scale = Math.max((W + 720) / bgImage.width, H / bgImage.height);
+        const bgW = Math.round(bgImage.width * scale);
+        const bgH = Math.round(bgImage.height * scale);
+        const bgY = Math.round((H - bgH) * 0.4); // Perfectly framed to show Ararat peaks and Arax gorge
+        const bgX = -Math.round(progress * (bgW - W));
+
+        // Draw once without any repeating tiles or seams
+        ctx.drawImage(bgImage, bgX, bgY, bgW, bgH);
+
+        // Cinematic Golden Sunbeams (God Rays) streaming over Yervandashat
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        const sunGlow = ctx.createLinearGradient(W * 0.35, 0, W * 0.1, H);
+        sunGlow.addColorStop(0, 'rgba(255, 230, 160, 0.20)');
+        sunGlow.addColorStop(0.5, 'rgba(255, 200, 100, 0.08)');
+        sunGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = sunGlow;
+        ctx.beginPath();
+        ctx.moveTo(W * 0.25, 0);
+        ctx.lineTo(W * 0.45, 0);
+        ctx.lineTo(W * 0.2, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.fill();
+
+        const sunGlow2 = ctx.createLinearGradient(W * 0.65, 0, W * 0.45, H);
+        sunGlow2.addColorStop(0, 'rgba(255, 240, 180, 0.15)');
+        sunGlow2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = sunGlow2;
+        ctx.beginPath();
+        ctx.moveTo(W * 0.58, 0);
+        ctx.lineTo(W * 0.76, 0);
+        ctx.lineTo(W * 0.52, H);
+        ctx.lineTo(W * 0.32, H);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        // Soaring Armenian mountain eagles high above the gorge
+        ctx.save();
+        ctx.strokeStyle = 'rgba(35, 25, 18, 0.6)';
+        ctx.lineWidth = 1.8;
+        const birdTime = Date.now() * 0.001;
+        for (let b = 0; b < 4; b++) {
+            const bx = ((b * 320 + birdTime * 28 - camX * 0.05) % (W + 220)) - 100;
+            const by = H * 0.16 + Math.sin(birdTime + b * 2) * 22;
+            const wing = Math.sin(birdTime * 4.2 + b) * 4;
+            ctx.beginPath();
+            ctx.moveTo(bx - 8, by + wing);
+            ctx.quadraticCurveTo(bx - 4, by - 4, bx, by);
+            ctx.quadraticCurveTo(bx + 4, by - 4, bx + 8, by + wing);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+    } else {
+        // Atmospheric Sky tailored for each city
+        const sky = ctx.createLinearGradient(0, 0, 0, H);
+        if (gameState.currentCityId === 2) { // Artashat
+            sky.addColorStop(0, '#2d1b28'); sky.addColorStop(0.5, '#733732'); sky.addColorStop(1, '#d35400');
+        } else if (gameState.currentCityId === 3) { // Tigranakert
+            sky.addColorStop(0, '#1c1c38'); sky.addColorStop(0.5, '#4a2542'); sky.addColorStop(1, '#f39c12');
+        } else if (gameState.currentCityId === 4) { // Vagharshapat
+            sky.addColorStop(0, '#120f24'); sky.addColorStop(0.5, '#2c1b3d'); sky.addColorStop(1, '#8e44ad');
+        } else if (gameState.currentCityId === 5) { // Dvin
+            sky.addColorStop(0, '#1a101f'); sky.addColorStop(0.5, '#4a1e28'); sky.addColorStop(1, '#c0392b');
+        } else if (gameState.currentCityId === 6) { // Amberd blizzard
+            sky.addColorStop(0, '#1c2833'); sky.addColorStop(0.5, '#2e4053'); sky.addColorStop(1, '#85929e');
+        } else { // Ani
+            sky.addColorStop(0, '#151329'); sky.addColorStop(0.5, '#3b1f2e'); sky.addColorStop(1, '#873426');
+        }
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, W, H);
+
+        // Distant Ararat Silhouette
+        ctx.fillStyle = 'rgba(20, 10, 18, 0.6)';
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+        const bigPeakX = W * 0.35 - camX * 0.035;
+        ctx.lineTo(bigPeakX, H * 0.35);
+        ctx.lineTo(bigPeakX + 240, H);
+        ctx.lineTo(bigPeakX + 460, H);
+        ctx.lineTo(W, H);
+        ctx.fill();
+    }
+
+    // Snow blizzard storm in Amberd (Level 6)
+    if (gameState.currentCityId === 6) {
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 60; i++) {
+            const sx = (Math.sin(i * 99 + Date.now() * 0.003) * 600 + W) % W;
+            const sy = (i * 18 + Date.now() * 0.25) % H;
+            ctx.globalAlpha = 0.6;
+            ctx.fillRect(sx, sy, 3, 3);
+        }
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+/* ==========================================================================
+   MAIN GAME LOOP
+   ========================================================================== */
+function gameLoop() {
+    requestAnimationFrame(gameLoop);
+
+    if (gameState.screen === 'PLAYING' && !gameState.paused) {
+        knight.update(platforms);
+        eagle.update(knight, collectibles);
+
+        enemies.forEach(e => e.update(platforms, knight));
+        arrows.forEach(a => a.update(knight));
+        collectibles.forEach(c => c.update(knight));
+        torches.forEach(t => t.update());
+        chests.forEach(c => c.update(knight));
+        traps.forEach(tr => tr.update(knight));
+        shrines.forEach(s => s.update(knight));
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life--;
+            if (p.life <= 0) particles.splice(i, 1);
+        }
+
+        for (let i = damagePopups.length - 1; i >= 0; i--) {
+            const dp = damagePopups[i];
+            dp.y += dp.vy;
+            dp.life--;
+            if (dp.life <= 0) damagePopups.splice(i, 1);
+        }
+
+        const targetCamX = knight.x - canvas.width / (2 * viewScale);
+        gameState.cameraX += (targetCamX - gameState.cameraX) * 0.09;
+        if (gameState.cameraX < 0) gameState.cameraX = 0;
+
+        const targetCamY = Math.max(0, knight.y - canvas.height / (1.8 * viewScale));
+        gameState.cameraY += (targetCamY - gameState.cameraY) * 0.08;
+    }
+
+    // Screen Shake
+    ctx.save();
+    if (screenShake > 0) {
+        ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
+        screenShake *= 0.86;
+        if (screenShake < 0.3) screenShake = 0;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawLivingBackground(ctx, gameState.cameraX, gameState.cameraY);
+
+    if (gameState.screen === 'PLAYING') {
+        ctx.save();
+        ctx.scale(viewScale, viewScale);
+
+        const currentCity = CITIES_DATA.find(c => c.id === gameState.currentCityId) || CITIES_DATA[0];
+
+        // 1. Natural Hewn Stone Platforms with Grass, Ivy & Bevels
+        platforms.forEach(p => {
+            const sx = Math.round(p.x - gameState.cameraX);
+            const sy = Math.round(p.y - gameState.cameraY);
+            if (sx + p.w > -50 && sx < canvas.width / viewScale + 50) {
+                // Drop shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+                ctx.fillRect(sx, sy + p.h, p.w, 8);
+
+                // Main stone masonry
+                ctx.fillStyle = currentCity.wallColor;
+                ctx.fillRect(sx, sy, p.w, p.h);
+
+                // Stone blocks bevel lines
+                ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+                ctx.lineWidth = 1.5;
+                for (let bx = 0; bx < p.w; bx += 40) {
+                    ctx.strokeRect(sx + bx, sy + 6, 40, p.h - 6);
+                }
+
+                // Lush green grass turf crest for Yervandashat (City 1) & nature levels
+                if (currentCity.id === 1) {
+                    ctx.fillStyle = '#27ae60';
+                    ctx.fillRect(sx, sy, p.w, 6);
+                    ctx.fillStyle = '#2ecc71';
+                    ctx.fillRect(sx, sy, p.w, 2);
+
+                    // Grass blade tufts
+                    ctx.fillStyle = '#2ecc71';
+                    for (let gx = 0; gx < p.w; gx += 16) {
+                        ctx.beginPath();
+                        ctx.moveTo(sx + gx, sy);
+                        ctx.lineTo(sx + gx + 3, sy - 4);
+                        ctx.lineTo(sx + gx + 6, sy);
+                        ctx.fill();
+                    }
+
+                    // Hanging Ivy Vines dripping down edges
+                    ctx.fillStyle = '#1e8449';
+                    ctx.strokeStyle = '#27ae60';
+                    ctx.lineWidth = 1.5;
+                    const vineStep = 55;
+                    for (let vx = 18; vx < p.w - 18; vx += vineStep) {
+                        const vineLen = 14 + ((vx * 17) % 18);
+                        ctx.beginPath();
+                        ctx.moveTo(sx + vx, sy + 6);
+                        ctx.quadraticCurveTo(sx + vx + 4, sy + 6 + vineLen/2, sx + vx, sy + 6 + vineLen);
+                        ctx.stroke();
+                        // Leaves
+                        ctx.beginPath();
+                        ctx.ellipse(sx + vx + 2, sy + 10, 3, 2, 0.4, 0, Math.PI * 2);
+                        ctx.ellipse(sx + vx - 2, sy + 16, 3, 2, -0.4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                } else {
+                    ctx.fillStyle = currentCity.color;
+                    ctx.fillRect(sx, sy, p.w, 4);
+                }
+            }
+        });
+
+        // 2. Torches with Warm Radial Halos
+        torches.forEach(t => t.draw(ctx, gameState.cameraX, gameState.cameraY));
+
+        // 3. Shrines & Traps
+        shrines.forEach(s => s.draw(ctx, gameState.cameraX, gameState.cameraY));
+        traps.forEach(tr => tr.draw(ctx, gameState.cameraX, gameState.cameraY));
+
+        // 4. Vases, Chests, Collectibles, Arrows, Enemies
+        vases.forEach(v => v.draw(ctx, gameState.cameraX, gameState.cameraY));
+        chests.forEach(c => c.draw(ctx, gameState.cameraX, gameState.cameraY));
+        collectibles.forEach(c => c.draw(ctx, gameState.cameraX, gameState.cameraY));
+        arrows.forEach(a => a.draw(ctx, gameState.cameraX, gameState.cameraY));
+        enemies.forEach(e => e.draw(ctx, gameState.cameraX, gameState.cameraY));
+
+        // 5. Knight & Royal Eagle
+        knight.draw(ctx, gameState.cameraX, gameState.cameraY);
+        eagle.draw(ctx, gameState.cameraX, gameState.cameraY);
+
+        // 6. Ambient Floating Leaves/Petals in the Breeze
+        ambientLeaves.forEach(l => {
+            if (!gameState.paused) {
+                l.x += l.vx;
+                l.y += l.vy + Math.sin(l.rot) * 0.4;
+                l.rot += l.rotSpeed;
+                if (l.x > 3300) l.x = 0;
+                if (l.y > 600) l.y = 0;
+            }
+            const lx = Math.round(l.x - gameState.cameraX);
+            const ly = Math.round(l.y - gameState.cameraY);
+            if (lx > -20 && lx < canvas.width / viewScale + 20) {
+                ctx.save();
+                ctx.translate(lx, ly);
+                ctx.rotate(l.rot);
+                ctx.fillStyle = l.color;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, l.size, l.size * 0.55, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        });
+
+        // 7. Particles
+        particles.forEach(p => {
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life / p.maxLife;
+            ctx.fillRect(p.x - gameState.cameraX, p.y - gameState.cameraY, p.size, p.size);
+            ctx.globalAlpha = 1;
+        });
+
+        // 8. Floating Damage Numbers & Combat Popups
+        damagePopups.forEach(dp => {
+            const sx = Math.round(dp.x - gameState.cameraX);
+            const sy = Math.round(dp.y - gameState.cameraY);
+            ctx.save();
+            ctx.font = '900 16px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.globalAlpha = Math.min(1, dp.life / 8);
+            ctx.fillStyle = '#000000';
+            ctx.fillText(dp.text, sx + 1.5, sy + 1.5);
+            ctx.fillStyle = dp.color;
+            ctx.fillText(dp.text, sx, sy);
+            ctx.restore();
+        });
+
+        ctx.restore();
+    }
+
+    ctx.restore();
+}
+
+gameLoop();
+showMainMenu();
+</script>
+</body>
+</html>
